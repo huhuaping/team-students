@@ -6,25 +6,60 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, message = F, warning = F)
 ```
 
-## R Markdown
+## 利用R 进行数据分析和制图
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r}
+x <- 1:100
+y <- c("hhp", "lisi")
 
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
+```{r read-data}
+# prepare pkgs
+#install.packages("tidyverse")
+require("tidyverse")
+#install.packages("xlsx")
+require("xlsx")
 
-You can also embed plots, for example:
+# read .xlsx file
+data_longley <- read.xlsx("data/Table-10-8-longley.xlsx", sheetIndex = 1) 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+data_new <- data_longley %>%
+  mutate(log.Y =log(Y), 
+         real.GDP = X3/X2)
+require("knitr")
+require("kableExtra")
+require("DT")
+
+data_new %>% 
+  datatable(options = list(
+    pageLength= 5,
+    tom="tip"
+  )) %>%
+  formatRound(c(10:11), digits=2)
+  
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+下面我们来制作一幅散点图：
+
+```{r, fig.cap="这是一幅傻傻的散点图"}
+require("ggplot2")
+data_new %>% 
+  as_tibble() %>%
+  mutate(Year=as.factor(Year)) %>%
+  ggplot(aes(Year, real.GDP)) +
+  geom_point(color="blue", size=3) +
+  labs(x="年份(Year)", y= "实际GDP(real.GDP)") 
+  #scale_x_continuous(breaks = seq(1947,1962, length.out = 8))
+  
+```
+
+
+
+
