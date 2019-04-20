@@ -1,0 +1,94 @@
+p.caption {
+  color: #777;
+  margin-top: 10px;
+}
+p code {
+  white-space: inherit;
+}
+pre {
+  word-break: normal;
+  word-wrap: normal;
+}
+pre code {
+  white-space: inherit;
+}
+p.flushright {
+  text-align: right;
+}
+blockquote > p:last-child {
+  text-align: right;
+}
+blockquote > p:first-child {
+  text-align: inherit;
+}
+
+/* to display the EViews command structure */
+#div2 {
+    width: 600px;
+    height: 20px;
+    padding: 30px;
+    border: 1px solid blue;
+}
+#action {
+  color: red;
+}
+#object_name {
+  color: blue;
+}
+#view_or_proc{
+  color: green;
+}
+#arg_list{
+  color: purple;
+}
+#options{
+  color: gray;
+}
+
+.rmdcomment {
+  padding: 1em 1em 1em 4em;
+  margin-bottom: 10px;
+  background: #f5f5f5;
+  position:relative;
+}
+
+.rmdcomment:before {
+    content: "\f086";
+    font-family: FontAwesome;
+    left:10px;
+    position:absolute;
+    top:0px;
+    font-size: 45px;
+ }
+ 
+ .rmdlist {
+  padding: 1em 1em 1em 4em;
+  margin-bottom: 10px;
+  background: #f5f5f5;
+  position:relative;
+}
+
+.rmdlist:before {
+    content: "\f0cb";
+    font-family: FontAwesome;
+    left:10px;
+    position:absolute;
+    top:0px;
+    font-size: 45px;
+ }
+ 
+ .rmdnotes {
+  padding: 1em 1em 1em 4em;
+  margin-bottom: 10px;
+  background: #f5f5f5;
+  position:relative;
+}
+
+.rmdnotes:before {
+    content: "\f249";
+    font-family: FontAwesome;
+    left:10px;
+    position:absolute;
+    top:0px;
+    font-size: 45px;
+ }
