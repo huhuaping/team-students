@@ -1,5 +1,5 @@
 ---
-title: "Rmarkdown入门"
+title: "git操作学习"
 author: "胡华平"
 date: "`r Sys.Date()`"
 output:
