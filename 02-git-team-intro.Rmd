@@ -3,6 +3,18 @@ title: "git操作学习"
 author: "胡华平"
 date: "`r Sys.Date()`"
 output:
+  html_document:
+    theme: united
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+  bookdown::word_document2: 
+    fig_caption:  true
+    toc: no
+    toc_depth: 1
+    reference_docx: test-ref.docx
   bookdown::html_document2:
     css: css/style.css
     highlight: tango
@@ -12,18 +24,6 @@ output:
     toc_float: true
     mathjax: local
     self_contained: no
-  bookdown::word_document2: 
-    fig_caption:  true
-    toc: no
-    toc_depth: 1
-    reference_docx: test-ref.docx
-  html_document:
-    theme: united
-    highlight: tango
-    number_sections: yes
-    toc: yes
-    fig_caption:  true
-    toc_float: true
   bookdown::pdf_document2:
     latex_engine: xelatex
     fig_caption:  true
@@ -59,26 +59,183 @@ require("kableExtra")
 - 第2章[git基础](https://git-scm.com/book/zh/v2/Git-%E5%9F%BA%E7%A1%80-%E8%8E%B7%E5%8F%96-Git-%E4%BB%93%E5%BA%93)
 
 
-# 安装git bash
+# 安装和配置（准备工作）
 
-# git基础知识
+## 安装git bash
 
-## 设置git工作目录
+> 此步骤**必须**。
 
+- 下载[git bash](https://git-scm.com/downloads)到本地电脑
 
-- 查看git工作目录
+- 在本地电脑安装**git bash**——强烈建议**默认安装路径**。
+
+## 申请github账号
+
+- 进入[github官网](https://github.com)申请一个github账号。
+
+> 建议使用高校邮箱如xxxx@nwsuaf.edu.cn，高校邮箱有福利（可以建立私有仓库啊，完成你的秘密项目）。
+
+> 记得取一个简单好记的**用户名**；记得改一个有个性的**头像**。（后面协作开发项目的时候，可以更方便沟通和交流！）。
+
+- 在**Git Bash**窗口，并输入如下代码（这是告诉git，我将以如下身份开始git之旅啦！）：
 
 ```
-$ pwd
+$ git config --global user.name "John Doe"
+$ git config --global user.email johndoe@example.com
 ```
 
-- 设置git工作目录
+## 安装文本编辑器Notepad++
+
+> 此步骤**非必须**，根据个人爱好而定。
+
+配置默认文本编辑器（text editor）。windows党还是自觉使用Notepad吧，免费又熟悉
+
+- 下载并在本地电脑安装[Notepad++](https://notepad-plus-plus.org/)——强烈建议**默认安装路径**
+
+- 在**Git Bash**窗口，并输入如下代码（这是告诉git，我将使用如下的默认文本编辑器）：
+
+```
+$ git config --global core.editor "'C:/Program Files (x86)/Notepad++/notepad++.exe' -multiInst -notabbar -nosession -noPlugin"
+```
+
+## 安装并配置合并检查工具——p4merge
+
+> 此步骤**非必须**，看你是不是git重度用户。
+
+配置合并检查工具（mergetool）。这个必须要图形化GUI的，p4merge就是一个不错的选择。
+
+- 下载并在**本地电脑**安装[p4merge](https://www.perforce.com/products/helix-core-apps/merge-diff-tool-p4merge)。————强烈建议**默认安装路径**。
+
+>windowns系统下默认安装路径一般为`"C:Program Files\Perforce\p4merge.exe"`。
+
+- 在**Git Bash**窗口，并输入如下代码（这是告诉git，我将使用如下的合并检查工具）：
+
+```
+$ git config --global diff.tool p4merge
+$ git config --global difftool.p4merge.path 'C:\Program Files\Perforce\p4merge.exe'
+
+$ git config --global merge.tool p4merge
+$ git config --global mergetool.p4merge.path 'C:\Program Files\Perforce\p4merge.exe'
+```
+
+## 检查git配置信息
+
+如果上述步骤都做好了，你可以系统地检查一下是不是git配置都正确（如你所愿）啦！
+
+- 在**Git Bash**窗口，并输入如下代码（这是告诉git，请列出我所有的git配置信息）：
+
+```
+$ git config --list
+```
+
+# git基础操作
+
+## 准备工作
+
+1. 准备本地电脑上的**工作文件夹**。例如，在`d`盘新建一个名为`project`的文件夹，那么工作文件路径就是`d:/project/`。
+
+> 工作文件夹最好不要设在系统盘，如c盘。——系统重装可能就麻烦了！
+
+> 文件夹命名**不要**出现中文。——编程世界中还是乖乖用英语吧！
+
+2. 在**Git Bash**窗口，并输入如下代码（这是告诉git，请进入工作文件夹吧）：
+
+```
+git cd /d/project
+```
+
+## (clone）克隆一个github在线仓库
+
+如果你想学习并改进一个已经github在线的公开项目，你可以把它**克隆**下来：
+
+1. 在github网站上找到自己喜欢的在线仓库，例如：https://github.com/huhuaping/team-students
+
+2. 在**Git Bash**窗口，并输入如下代码（这是告诉git，请拷贝这个在线仓库吧）：
+
+```
+git clone https://github.com/huhuaping/team-students
+```
+
+3. 上述操作会在当前工作目录下创建一个名为 “team-students” 的目录，并在这个目录下初始化一个 .git 文件夹。
+
+
+## (fork)派生一个项目
+
+如果你想对一个公开项目（例如，https://github.com/huhuaping/team-students ）做出自己的贡献，你可以把它fork到你的github账户下。
+
+1. 进入[github官方网站](https://github.com)，用你的账号密码登陆进去。
+
+2. 在浏览器上新建标签页，找到你感兴趣的公开项目（例如，https://github.com/huhuaping/team-students ）。
+
+> 你也可以直接搜索你感兴趣的任意公开项目
+
+3. 对于这个你感兴趣的公开项目，点击网页上大大的**Fork**按钮。
+
+4. 这时，你可以在你自己账户下的仓库列表中，看到刚才**Fork**的你感兴趣的项目。
+
+5. 在**Git Bash**窗口，并输入如下代码（这是告诉git，请进入工作文件夹吧）：
+
+```
+git clone https://github.com/your-account-name/team-students
+```
+
+> 注意：这里的`your-account-name`是你github账户的用户名——因为你把别人的公开项目**（派生）Fork**到自己的账户下啦！
+
+6. 进入工作文件夹。在**Git Bash**窗口，并输入如下代码（这是告诉git，请进入工作文件夹吧）：
 
 
 ```
-$ cd  /e/projects/
+cd  /d/projects/team-students
 ```
 
-# github合作
+7. 新建一个名为`git-intro`的**分支**（branch），并**检出**（checkout）到这个分支。——**这一步的意义以后再说吧**。在**Git Bash**窗口，并输入如下代码（这是告诉git，请进入工作文件夹吧）：
 
+```
+git checkout -b git-intro
+```
+
+## 对项目进行版本控制
+
+1. 对项目代码进行修改和完善。例如，
+
+> 打开R项目文件`team-students.Rproj`，运行Rstudio
+> 修改其中Rmarkdown文件`02-git-team-intro.Rmd`的内容，例如增加一行代码。
+> 保存（save）好修改。
+
+2. **暂存**（stage）修改。在**Git Bash**窗口，并输入如下代码（这是告诉git，把这个文件暂存**stage**起来吧）：
+
+```
+git add 02-git-team-intro.Rmd
+```
+
+3. **提交**（commit）修改。在**Git Bash**窗口，并输入如下代码（这是告诉git，提交修改，并附注一条信息`add a new line`）：
+
+```
+git commit -m 'add a new line'
+```
+
+4. **推送**（push）修改。在**Git Bash**窗口，并输入如下代码（这是告诉git，把我们的修改推送到github云端去吧）：
+
+```
+git git push origin git-intro
+```
+
+# 常用的git命令
+
+
+1. 如何查看git工作目录？在**Git Bash**窗口，输入并运行如下代码：
+
+```
+pwd
+```
+
+2. 如何视图化查看提交历史、各个分支的指向以及项目的分支分叉情况？
+
+```
+$ git log --oneline --decorate --graph --all
+```
+
+3. 如何退出当前列表？在**Git Bash**窗口，输入并运行代码`q`，可以直接退出当前的列表**ls**。
+
+3. 如何退出**Git Bash**窗口？在**Git Bash**窗口，输入并运行代码`exit`，可以直接退出**git Bash**窗口
 
