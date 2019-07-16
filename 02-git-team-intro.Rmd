@@ -220,6 +220,10 @@ git commit -m 'add a new line'
 git git push origin git-intro
 ```
 
+# 推送本地新建分支
+
+[参考](https://hackernoon.com/git-push-and-pull-tips-and-tricks-7f9163539f02)
+
 # 常用的git命令
 
 
