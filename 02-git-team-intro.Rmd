@@ -3,18 +3,6 @@ title: "git操作学习"
 author: "胡华平"
 date: "`r Sys.Date()`"
 output:
-  html_document:
-    theme: united
-    highlight: tango
-    number_sections: yes
-    toc: yes
-    fig_caption:  true
-    toc_float: true
-  bookdown::word_document2: 
-    fig_caption:  true
-    toc: no
-    toc_depth: 1
-    reference_docx: test-ref.docx
   bookdown::html_document2:
     css: css/style.css
     highlight: tango
@@ -24,6 +12,18 @@ output:
     toc_float: true
     mathjax: local
     self_contained: no
+  bookdown::word_document2: 
+    fig_caption:  true
+    toc: no
+    toc_depth: 1
+    reference_docx: test-ref.docx
+  html_document:
+    theme: united
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
   bookdown::pdf_document2:
     latex_engine: xelatex
     fig_caption:  true
@@ -52,7 +52,7 @@ require("kableExtra")
 
 自学材料：
 
-[Pro git](https://git-scm.com/book/zh/v2)（Yihui Xie, J. J. Allaire, Garrett Grolemund）
+[Pro git book](https://git-scm.com/book/zh/v2)（Scott Chacon and Ben Straub）
 
 - 第1章[起步](https://git-scm.com/book/zh/v2/%E8%B5%B7%E6%AD%A5-%E5%85%B3%E4%BA%8E%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6)
 
@@ -223,6 +223,32 @@ git git push origin git-intro
 # 推送本地新建分支
 
 [参考](https://hackernoon.com/git-push-and-pull-tips-and-tricks-7f9163539f02)
+
+1. 新建并检出到本地分支（local branch）
+
+```
+$ git checkout -b dev
+  Switched to a new branch 'dev'
+```
+
+2. 查看远程分支（remotes）
+
+```
+$ git remote -v
+```
+
+3. 设定上游分支（upstream），以后就可直接推送：语法为`git push -u <remote> <branch>`
+
+```
+$ git push -u origin feat
+$ git push
+```
+
+4. 查看上游分支的引用关系
+
+```
+$ git branch -avv
+```
 
 # 常用的git命令
 
