@@ -267,5 +267,5 @@ $ git log --oneline --decorate --graph --all
 
 3. 如何退出当前列表？在**Git Bash**窗口，输入并运行代码`q`，可以直接退出当前的列表**ls**。
 
-3. 如何退出**Git Bash**窗口？在**Git Bash**窗口，输入并运行代码`exit`，可以直接退出**git Bash**窗口
+4. 如何退出**Git Bash**窗口？在**Git Bash**窗口，输入并运行代码`exit`，可以直接退出**git Bash**窗口
 
