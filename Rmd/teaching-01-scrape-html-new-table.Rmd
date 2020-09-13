@@ -100,18 +100,18 @@ require("here")
 ## 原始html表格
 
 ```{r, fig.cap= "直接打开html发现表格列对不齐"}
-include_graphics("../pic/public-budget/view-normal.png")
+include_graphics("pic/public-budget/view-normal.png")
 ```
 
 
 ```{r, fig.cap= "通过firefox或chrome调试器查看是很整齐的数据表"}
-include_graphics("../pic/public-budget/view-source.png")
+include_graphics("pic/public-budget/view-source.png")
 ```
 
 全部原始html文件可以查看github[仓库](https://github.com/huhuaping/team-students/tree/dev/data/public-budget/html)
 
 ```{r, fig.cap= "有多个年度的html页面"}
-include_graphics("../pic/public-budget/files-list.png")
+include_graphics("pic/public-budget/files-list.png")
 ```
 
 ## 异常情况总结
