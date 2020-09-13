@@ -1,0 +1,2641 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="胡华平" />
+
+<meta name="date" content="2020-09-12" />
+
+<title>html异常表格提取技术——各地区一般公共支出数据为例</title>
+
+<script src="teaching-01-scrape-html-new-table_files/jquery/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="teaching-01-scrape-html-new-table_files/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+<script src="teaching-01-scrape-html-new-table_files/bootstrap/js/bootstrap.min.js"></script>
+<script src="teaching-01-scrape-html-new-table_files/bootstrap/shim/html5shiv.min.js"></script>
+<script src="teaching-01-scrape-html-new-table_files/bootstrap/shim/respond.min.js"></script>
+<script src="teaching-01-scrape-html-new-table_files/jqueryui/jquery-ui.min.js"></script>
+<link href="teaching-01-scrape-html-new-table_files/tocify/jquery.tocify.css" rel="stylesheet" />
+<script src="teaching-01-scrape-html-new-table_files/tocify/jquery.tocify.js"></script>
+<script src="teaching-01-scrape-html-new-table_files/navigation/tabsets.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="css\style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">html异常表格提取技术——各地区一般公共支出数据为例</h1>
+<h4 class="author">胡华平</h4>
+<h4 class="date">2020-09-12</h4>
+
+</div>
+
+
+<div id="html异常表格的问题" class="section level1">
+<h1><span class="header-section-number">1</span> html异常表格的问题</h1>
+<div id="原始html表格" class="section level2">
+<h2><span class="header-section-number">1.1</span> 原始html表格</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">include_graphics</span>(<span class="st">&quot;../pic/public-budget/view-normal.png&quot;</span>)</span></code></pre></div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-1"></span>
+<img src="../pic/public-budget/view-normal.png" alt="直接打开html发现表格列对不齐" width="402" />
+<p class="caption">
+Figure 1.1: 直接打开html发现表格列对不齐
+</p>
+</div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">include_graphics</span>(<span class="st">&quot;../pic/public-budget/view-source.png&quot;</span>)</span></code></pre></div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-2"></span>
+<img src="../pic/public-budget/view-source.png" alt="通过firefox调试器查看是很整齐的数据表" width="648" />
+<p class="caption">
+Figure 1.2: 通过firefox调试器查看是很整齐的数据表
+</p>
+</div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">include_graphics</span>(<span class="st">&quot;../pic/public-budget/files-list.png&quot;</span>)</span></code></pre></div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-3"></span>
+<img src="../pic/public-budget/files-list.png" alt="有多个年度的html页面" width="731" />
+<p class="caption">
+Figure 1.3: 有多个年度的html页面
+</p>
+</div>
+</div>
+<div id="异常情况总结" class="section level2">
+<h2><span class="header-section-number">1.2</span> 异常情况总结</h2>
+<p>总结起来问题大概有三个：</p>
+<p><strong>html表格形式异常</strong>：</p>
+<ul>
+<li>2004年及以前 一张html有4个表格部分。</li>
+</ul>
+<p><strong>标题行异常</strong>：</p>
+<ul>
+<li><p>2004年及以前，2006年：双行标题</p></li>
+<li><p>2005年，单行标题</p></li>
+<li><p>2018年，共3个html页面，第一个页面双行标题，其他则为单行标题</p></li>
+</ul>
+<p><strong>排列缩进异常</strong>：</p>
+<ul>
+<li>2006、2007、2009年:“地方合计”排序需要单独减少一个"</li>
+</ul>
+</div>
+<div id="需要达到的目标效果" class="section level2">
+<h2><span class="header-section-number">1.3</span> 需要达到的目标效果</h2>
+<p>主要包括如下几个目标：</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>获得排列整齐的表格(dataframe)</p></li>
+<li><p>获得原始文件的列标题</p></li>
+<li><p>高度编程自动化，尽量减少手工操作介入</p></li>
+</ol>
+</div>
+</div>
+<div id="目标1得到排列整齐的表格" class="section level1">
+<h1><span class="header-section-number">2</span> 目标1：得到排列整齐的表格</h1>
+<div id="html表格不整齐的问题诊断和处理思路" class="section level2">
+<h2><span class="header-section-number">2.1</span> html表格不整齐的问题诊断和处理思路</h2>
+<p>经过仔细分析html源文件，可以发现表格背后的一些规律和特点：</p>
+<p><strong>A.表格显示不整齐现象</strong>：</p>
+<ul>
+<li><p>无法对齐（chrome直接看html 表格）。尤其是碰到缺失值（且无特定缺失值标记符，如-），进一步加剧显示的混乱性。</p></li>
+<li><p>基本对齐（chrome查看源代码，chrome - 检查- sources -）。</p></li>
+</ul>
+<p><strong>B.表格显示不整齐的原因</strong>：</p>
+<ul>
+<li><p>html编码时，table/tbody/tr/td， 采用了&amp;nbsp空格符。其unic编码显示为<code>\u00A0</code>。</p></li>
+<li><p>数据表对齐方式。在html源码文件中(chrome - 检查- sources -) 可能存在“左对齐”和“右对齐”两种办法。</p></li>
+</ul>
+<p><strong>C.表格显示不整齐的解决办法</strong>：</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>识别左对齐还是右对齐(check)</p></li>
+<li><p>然后定位位置(str_locate_all)</p></li>
+<li><p>处理缺失值问题，并进行全列匹配(left_join)。</p></li>
+</ol>
+</div>
+<div id="自动化提取html表格的代码实现" class="section level2">
+<h2><span class="header-section-number">2.2</span> 自动化提取html表格的代码实现</h2>
+<div id="工具包准备" class="section level3">
+<h3><span class="header-section-number">2.2.1</span> 工具包准备</h3>
+<p>转载需要用到的各种R包。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co"># load pkgs</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="kw">library</span>(<span class="st">&quot;xml2&quot;</span>)</span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="kw">require</span>(<span class="st">&quot;rvest&quot;</span>)</span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="kw">require</span>(<span class="st">&quot;stringr&quot;</span>)</span>
+<span id="cb4-5"><a href="#cb4-5"></a><span class="kw">require</span>(<span class="st">&quot;tidyverse&quot;</span>)</span>
+<span id="cb4-6"><a href="#cb4-6"></a><span class="kw">require</span>(<span class="st">&quot;tidyselect&quot;</span>)</span>
+<span id="cb4-7"><a href="#cb4-7"></a><span class="kw">require</span>(<span class="st">&quot;openxlsx&quot;</span>)</span>
+<span id="cb4-8"><a href="#cb4-8"></a><span class="kw">require</span>(<span class="st">&quot;here&quot;</span>)</span></code></pre></div>
+<p>提前导入已经设置好的R函数：</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># load the basic function</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="co">### some times you need change the code</span></span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="kw">source</span>(<span class="kw">here</span>(<span class="st">&quot;Rfun&quot;</span>,<span class="st">&quot;extract-from-html.R&quot;</span>))</span></code></pre></div>
+</div>
+<div id="获得html文件位置" class="section level3">
+<h3><span class="header-section-number">2.2.2</span> 获得html文件位置</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="co"># files html path</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a>files_dir &lt;-<span class="st"> </span>here<span class="op">::</span><span class="kw">here</span>(<span class="st">&quot;data&quot;</span>, <span class="st">&quot;public-budget&quot;</span>,<span class="st">&quot;html&quot;</span>)</span>
+<span id="cb6-3"><a href="#cb6-3"></a>files_html &lt;-<span class="st"> </span><span class="kw">list.files</span>(<span class="kw">str_c</span>(files_dir,<span class="st">&quot;/&quot;</span>))</span>
+<span id="cb6-4"><a href="#cb6-4"></a>page_url &lt;-<span class="st"> </span><span class="kw">str_c</span>(files_dir, files_html, <span class="dt">sep =</span> <span class="st">&quot;/&quot;</span>)</span>
+<span id="cb6-5"><a href="#cb6-5"></a></span>
+<span id="cb6-6"><a href="#cb6-6"></a><span class="co"># specify the year</span></span>
+<span id="cb6-7"><a href="#cb6-7"></a>year&lt;-<span class="st"> </span><span class="dv">2011</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a>indx&lt;-<span class="st"> </span><span class="kw">str_detect</span>(page_url,<span class="kw">paste0</span>(year))</span>
+<span id="cb6-9"><a href="#cb6-9"></a>page&lt;-<span class="st"> </span>page_url[indx]</span>
+<span id="cb6-10"><a href="#cb6-10"></a>i_len &lt;-<span class="st"> </span><span class="kw">length</span>(page)</span></code></pre></div>
+<p>html文件位于D:/github/team-students/data/public-budget/html/2011-t00.html。</p>
+</div>
+<div id="提取html表格" class="section level3">
+<h3><span class="header-section-number">2.2.3</span> 提取html表格</h3>
+<p>R代码如下：</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="co"># xpath selector</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a>path_tbl&lt;-<span class="st">&quot;/html/body/table[2]/tbody/tr[2]/td/table/tbody/tr/td[2]/table&quot;</span></span>
+<span id="cb7-3"><a href="#cb7-3"></a></span>
+<span id="cb7-4"><a href="#cb7-4"></a><span class="co"># the html source file declares gb2312</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a>tbl_raw &lt;-<span class="st"> </span><span class="kw">read_html</span>(page,<span class="dt">encoding =</span> <span class="st">&quot;utf-8&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb7-6"><a href="#cb7-6"></a><span class="st">  </span><span class="kw">html_nodes</span>(<span class="dt">xpath =</span>  path_tbl) <span class="op">%&gt;%</span></span>
+<span id="cb7-7"><a href="#cb7-7"></a><span class="st">  </span><span class="kw">html_table</span>(., <span class="dt">fill=</span>T, <span class="dt">trim=</span>T) <span class="op">%&gt;%</span></span>
+<span id="cb7-8"><a href="#cb7-8"></a><span class="st">  </span>.[[<span class="dv">1</span>]]  </span></code></pre></div>
+<p>初步提取结果如下：</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">X1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">【行业】财税</td>
+</tr>
+<tr class="even">
+<td align="left">【地域】中国</td>
+</tr>
+<tr class="odd">
+<td align="left">【时间】20111231</td>
+</tr>
+<tr class="even">
+<td align="left">【参考资料】精讯数据</td>
+</tr>
+<tr class="odd">
+<td align="left">【统计项目】中国2011年各地区财政支出统计(13145字)</td>
+</tr>
+<tr class="even">
+<td align="left">【指标参数】</td>
+</tr>
+</tbody>
+</table>
+<p>&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;中国2011年各地区财政支出统计
+&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;单位:亿元 |
+|地区&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;一般预算支出&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;一般公共服务&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;外交&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;国防&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;公共安全&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;教育&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;科学技术&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;文化体育与传媒&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;社会保障和就业&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;医疗卫生&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;节能保护&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;城乡社区事务&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;农林水事务&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;交通运输&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;资源勘探电力信息等事务&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;商业服务业等事务&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;金融监管等事务支出&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;地震灾后恢复重建支出&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;国土资源气象等事务&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;住房保障支出&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;粮油物资储备管理事务&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;国债还本付息支出&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;其他支出 |
+|地方合计&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;92733.68&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;10084.77&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;2.75&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;198.29&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;5267.26&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;15498.28&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;1885.88&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;1704.64&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;10606.92&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;6358.19&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;2566.79&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;7608.93&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;9520.99&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;7166.69&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;3547.26&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;1394.79&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;235.34&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;174.45&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;1289.74&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;3491.87&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;729.49&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;564.12&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;2836.25 |</p>
+</div>
+<div id="探查html表格的构成" class="section level3">
+<h3><span class="header-section-number">2.2.4</span> 探查html表格的构成</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="co"># detect the start and end row</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a>first_end &lt;-<span class="st"> </span><span class="kw">which</span>(<span class="kw">str_detect</span>(tbl_raw<span class="op">$</span>X1,<span class="st">&quot;地方合计|新疆&quot;</span>))</span>
+<span id="cb8-3"><a href="#cb8-3"></a>n_part &lt;-<span class="st"> </span><span class="kw">length</span>(first_end)<span class="op">/</span><span class="dv">2</span></span>
+<span id="cb8-4"><a href="#cb8-4"></a></span>
+<span id="cb8-5"><a href="#cb8-5"></a><span class="co"># detect the range of table part</span></span>
+<span id="cb8-6"><a href="#cb8-6"></a>spc_part &lt;-<span class="st"> </span>n_part</span>
+<span id="cb8-7"><a href="#cb8-7"></a>range &lt;-<span class="st"> </span>(first_end[(<span class="dv">2</span><span class="op">*</span>spc_part <span class="dv">-1</span>)])<span class="op">:</span>first_end[<span class="dv">2</span><span class="op">*</span>spc_part] <span class="co">#  如有&quot;全国&quot;，则起始要减去1</span></span></code></pre></div>
+<p>通过特殊行“地方合计|新疆”，可以判明表格被分割了1个部分。</p>
+<p>同时，可以探查到表格<strong>主体</strong>的范围8-39行之间。</p>
+</div>
+<div id="识别html表格对齐模式" class="section level3">
+<h3><span class="header-section-number">2.2.5</span> 识别html表格对齐模式</h3>
+<p>R代码如下：</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="co"># handle the extra rows</span></span>
+<span id="cb9-2"><a href="#cb9-2"></a>pro_extra &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;地方合计&quot;</span>,<span class="st">&quot;内蒙古&quot;</span>,<span class="st">&quot;黑龙江&quot;</span>)</span>
+<span id="cb9-3"><a href="#cb9-3"></a></span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="cf">if</span> (year <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="dv">2006</span>,<span class="dv">2007</span>,<span class="dv">2009</span>)){</span>
+<span id="cb9-5"><a href="#cb9-5"></a>  pro_standard &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;地方合计\u00A0&quot;</span>,<span class="st">&quot;内蒙古\u00A0&quot;</span>,<span class="st">&quot;黑龙江\u00A0&quot;</span>)</span>
+<span id="cb9-6"><a href="#cb9-6"></a>} <span class="cf">else</span> {</span>
+<span id="cb9-7"><a href="#cb9-7"></a>  pro_standard &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;地方合计\u00A0\u00A0&quot;</span>,<span class="st">&quot;内蒙古\u00A0&quot;</span>,<span class="st">&quot;黑龙江\u00A0&quot;</span>)</span>
+<span id="cb9-8"><a href="#cb9-8"></a>}</span>
+<span id="cb9-9"><a href="#cb9-9"></a></span>
+<span id="cb9-10"><a href="#cb9-10"></a><span class="co"># get the tidy alignment tbl</span></span>
+<span id="cb9-11"><a href="#cb9-11"></a>tbl_html &lt;-<span class="st"> </span>tbl_raw <span class="op">%&gt;%</span></span>
+<span id="cb9-12"><a href="#cb9-12"></a><span class="st">  </span>.[range,] <span class="op">%&gt;%</span></span>
+<span id="cb9-13"><a href="#cb9-13"></a><span class="st">  </span><span class="kw">as_tibble</span>() <span class="op">%&gt;%</span></span>
+<span id="cb9-14"><a href="#cb9-14"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">value=</span> <span class="kw">str_trim</span>(value, <span class="st">&quot;both&quot;</span>)) <span class="op">%&gt;%</span></span>
+<span id="cb9-15"><a href="#cb9-15"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">value=</span><span class="kw">paste0</span>(value, <span class="st">&quot;\u00A0&quot;</span>)) <span class="op">%&gt;%</span></span>
+<span id="cb9-16"><a href="#cb9-16"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">value=</span> mgsub<span class="op">::</span><span class="kw">mgsub</span>(value, pro_extra, pro_standard)) <span class="op">%&gt;%</span></span>
+<span id="cb9-17"><a href="#cb9-17"></a><span class="st">  </span><span class="co"># be careful to the return value&#39; class of function str_locate_all()</span></span>
+<span id="cb9-18"><a href="#cb9-18"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">location=</span><span class="kw">str_locate_all</span>(value, <span class="st">&quot;(?&lt;=\u00A0)(</span><span class="ch">\\</span><span class="st">d.+?)(?=\u00A0)&quot;</span>),</span>
+<span id="cb9-19"><a href="#cb9-19"></a>         <span class="dt">start=</span>(<span class="kw">map</span>(location, <span class="cf">function</span>(x){x[,<span class="dv">1</span>]})),</span>
+<span id="cb9-20"><a href="#cb9-20"></a>         <span class="dt">end=</span>(<span class="kw">map</span>(location, <span class="cf">function</span>(x){x[,<span class="dv">2</span>]}))) <span class="op">%&gt;%</span></span>
+<span id="cb9-21"><a href="#cb9-21"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">begin=</span><span class="kw">map</span>(start, <span class="cf">function</span>(x){x[[<span class="dv">1</span>]]}),</span>
+<span id="cb9-22"><a href="#cb9-22"></a>         <span class="dt">tail=</span><span class="kw">map</span>(end, <span class="cf">function</span>(x){x[[<span class="dv">1</span>]]})) <span class="op">%&gt;%</span></span>
+<span id="cb9-23"><a href="#cb9-23"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">begin=</span><span class="kw">unlist</span>(begin),</span>
+<span id="cb9-24"><a href="#cb9-24"></a>         <span class="dt">tail=</span><span class="kw">unlist</span>(tail),</span>
+<span id="cb9-25"><a href="#cb9-25"></a>         <span class="dt">mod_begin=</span><span class="kw">unlist</span>(<span class="kw">getModes</span>(begin)),</span>
+<span id="cb9-26"><a href="#cb9-26"></a>         <span class="dt">mod_tail=</span><span class="kw">unlist</span>(<span class="kw">getModes</span>(tail)),</span>
+<span id="cb9-27"><a href="#cb9-27"></a>         <span class="dt">diff_begin =</span> mod_begin<span class="op">-</span>begin,</span>
+<span id="cb9-28"><a href="#cb9-28"></a>         <span class="dt">diff_tail =</span> mod_tail<span class="op">-</span>tail,</span>
+<span id="cb9-29"><a href="#cb9-29"></a>         <span class="dt">check_begin =</span> (begin<span class="op">==</span>mod_begin),</span>
+<span id="cb9-30"><a href="#cb9-30"></a>         <span class="dt">check_tail =</span> (tail<span class="op">==</span>mod_tail)) </span></code></pre></div>
+<p>识别html表格对齐模式的简要结果：</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>tbl_html <span class="op">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="st">  </span><span class="kw">as_tibble</span>() <span class="op">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a><span class="st">  </span><span class="kw">select</span>(begin<span class="op">:</span>check_tail) <span class="op">%&gt;%</span></span>
+<span id="cb10-4"><a href="#cb10-4"></a><span class="st">  </span><span class="kw">head</span>() <span class="op">%&gt;%</span></span>
+<span id="cb10-5"><a href="#cb10-5"></a><span class="st">  </span><span class="kw">add_column</span>(<span class="dt">index=</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(.), <span class="dt">.before =</span> <span class="st">&quot;begin&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb10-6"><a href="#cb10-6"></a><span class="st">  </span><span class="kw">kable</span>(<span class="dt">caption =</span> <span class="st">&quot;检查排列的关系&quot;</span>)</span></code></pre></div>
+<table>
+<caption><span id="tab:unnamed-chunk-11">Table 2.1: </span>检查排列的关系</caption>
+<thead>
+<tr class="header">
+<th align="right">index</th>
+<th align="right">begin</th>
+<th align="right">tail</th>
+<th align="right">mod_begin</th>
+<th align="right">mod_tail</th>
+<th align="right">diff_begin</th>
+<th align="right">diff_tail</th>
+<th align="left">check_begin</th>
+<th align="left">check_tail</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">11</td>
+<td align="right">18</td>
+<td align="right">11</td>
+<td align="right">17</td>
+<td align="right">0</td>
+<td align="right">-1</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">11</td>
+<td align="right">17</td>
+<td align="right">11</td>
+<td align="right">17</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">11</td>
+<td align="right">17</td>
+<td align="right">11</td>
+<td align="right">17</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="right">11</td>
+<td align="right">17</td>
+<td align="right">11</td>
+<td align="right">17</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">11</td>
+<td align="right">17</td>
+<td align="right">11</td>
+<td align="right">17</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="right">11</td>
+<td align="right">17</td>
+<td align="right">11</td>
+<td align="right">17</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody>
+</table>
+<p>手动调整异常情况后：</p>
+<ul>
+<li><p>如果<strong>首列</strong>定位完全一样，也即<code>all(tbl_htm$check_begin)</code>为<code>True</code>，则判定源文件表格为<strong>左对齐</strong></p></li>
+<li><p>如果<strong>尾列</strong>定位完全一样，也即<code>all(tbl_htm$check_tail)</code>为<code>True</code>，则判定源文件表格为<strong>右对齐</strong></p></li>
+</ul>
+</div>
+<div id="获得整齐表格" class="section level3">
+<h3><span class="header-section-number">2.2.6</span> 获得整齐表格</h3>
+<p>R代码如下：</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="co"># get the data.frame</span></span>
+<span id="cb11-2"><a href="#cb11-2"></a>tbl_pair &lt;-<span class="st"> </span>tbl_html <span class="op">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">num =</span><span class="kw">str_extract_all</span>(value, <span class="st">&quot;(?&lt;=\u00A0)(</span><span class="ch">\\</span><span class="st">d.+?)(?=\u00A0)&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb11-4"><a href="#cb11-4"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">pair=</span><span class="kw">pmap</span>(<span class="kw">list</span>(start, end, num), </span>
+<span id="cb11-5"><a href="#cb11-5"></a>                   <span class="dt">.f =</span> <span class="cf">function</span>(x,y,z){value &lt;-<span class="st"> </span><span class="kw">tibble</span>(<span class="dt">start=</span>x, <span class="dt">end=</span>y, <span class="dt">num=</span>z)})) <span class="op">%&gt;%</span></span>
+<span id="cb11-6"><a href="#cb11-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">pair=</span><span class="kw">map</span>(pair, </span>
+<span id="cb11-7"><a href="#cb11-7"></a>                  <span class="cf">function</span>(dt){calc&lt;-<span class="st"> </span>dt <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">n=</span>end<span class="op">-</span>start <span class="op">+</span><span class="dv">1</span>)})) <span class="op">%&gt;%</span></span>
+<span id="cb11-8"><a href="#cb11-8"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">len=</span><span class="kw">map</span>(pair, <span class="cf">function</span>(dt){<span class="kw">dim</span>(dt)[<span class="dv">1</span>]})) </span>
+<span id="cb11-9"><a href="#cb11-9"></a></span>
+<span id="cb11-10"><a href="#cb11-10"></a><span class="co"># get the standard mod</span></span>
+<span id="cb11-11"><a href="#cb11-11"></a>tbl_mod &lt;-<span class="st"> </span>tbl_pair <span class="op">%&gt;%</span></span>
+<span id="cb11-12"><a href="#cb11-12"></a><span class="st">  </span><span class="kw">filter</span>(len<span class="op">==</span><span class="kw">max</span>(<span class="kw">unlist</span>(.<span class="op">$</span>len))) <span class="op">%&gt;%</span></span>
+<span id="cb11-13"><a href="#cb11-13"></a><span class="st">  </span>.[<span class="dv">1</span>,] <span class="op">%&gt;%</span></span>
+<span id="cb11-14"><a href="#cb11-14"></a><span class="st">  </span><span class="kw">select</span>(pair) <span class="op">%&gt;%</span></span>
+<span id="cb11-15"><a href="#cb11-15"></a><span class="st">  </span><span class="kw">unnest</span>(pair) <span class="op">%&gt;%</span></span>
+<span id="cb11-16"><a href="#cb11-16"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">cols=</span><span class="kw">paste0</span>(<span class="st">&quot;V&quot;</span>,<span class="kw">str_pad</span>(<span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(.), <span class="dt">width =</span> <span class="dv">2</span>,<span class="dt">pad =</span> <span class="st">&quot;0&quot;</span>, <span class="dt">side =</span> <span class="st">&quot;left&quot;</span>))) <span class="op">%&gt;%</span></span>
+<span id="cb11-17"><a href="#cb11-17"></a><span class="st">  </span><span class="kw">select</span>(start,end, cols)</span>
+<span id="cb11-18"><a href="#cb11-18"></a>    </span>
+<span id="cb11-19"><a href="#cb11-19"></a></span>
+<span id="cb11-20"><a href="#cb11-20"></a><span class="co"># match the standard rows</span></span>
+<span id="cb11-21"><a href="#cb11-21"></a><span class="cf">if</span> (<span class="kw">all</span>(tbl_pair<span class="op">$</span>check_begin)){</span>
+<span id="cb11-22"><a href="#cb11-22"></a>  tbl_match &lt;-<span class="st"> </span>tbl_pair <span class="op">%&gt;%</span></span>
+<span id="cb11-23"><a href="#cb11-23"></a><span class="st">    </span><span class="kw">select</span>(value,pair)<span class="op">%&gt;%</span></span>
+<span id="cb11-24"><a href="#cb11-24"></a><span class="st">    </span><span class="kw">mutate</span>(<span class="dt">pair=</span><span class="kw">map</span>(pair, <span class="cf">function</span>(dt){ </span>
+<span id="cb11-25"><a href="#cb11-25"></a>      out&lt;-<span class="st"> </span>tbl_mod <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb11-26"><a href="#cb11-26"></a><span class="st">      </span><span class="kw">select</span>(<span class="op">-</span>end) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">left_join</span>(., dt, <span class="dt">by=</span><span class="st">&quot;start&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb11-27"><a href="#cb11-27"></a><span class="st">      </span><span class="kw">select</span>(start, <span class="kw">everything</span>(.))}</span>
+<span id="cb11-28"><a href="#cb11-28"></a>      ))</span>
+<span id="cb11-29"><a href="#cb11-29"></a>} <span class="cf">else</span> <span class="cf">if</span> (<span class="kw">all</span>(tbl_pair<span class="op">$</span>check_tail)) {</span>
+<span id="cb11-30"><a href="#cb11-30"></a>  tbl_match &lt;-<span class="st"> </span>tbl_pair <span class="op">%&gt;%</span></span>
+<span id="cb11-31"><a href="#cb11-31"></a><span class="st">    </span><span class="kw">select</span>(value,pair)<span class="op">%&gt;%</span></span>
+<span id="cb11-32"><a href="#cb11-32"></a><span class="st">    </span><span class="kw">mutate</span>(<span class="dt">pair=</span><span class="kw">map</span>(pair, <span class="cf">function</span>(dt){ </span>
+<span id="cb11-33"><a href="#cb11-33"></a>      out&lt;-<span class="st"> </span>tbl_mod <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb11-34"><a href="#cb11-34"></a><span class="st">      </span><span class="kw">select</span>(<span class="op">-</span>start) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">left_join</span>(., dt, <span class="dt">by=</span><span class="st">&quot;end&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb11-35"><a href="#cb11-35"></a><span class="st">      </span><span class="kw">select</span>( end, <span class="kw">everything</span>(.))}</span>
+<span id="cb11-36"><a href="#cb11-36"></a>      ))</span>
+<span id="cb11-37"><a href="#cb11-37"></a>}</span>
+<span id="cb11-38"><a href="#cb11-38"></a></span>
+<span id="cb11-39"><a href="#cb11-39"></a><span class="co"># prepare for detect provinces</span></span>
+<span id="cb11-40"><a href="#cb11-40"></a>levels_province&lt;-<span class="kw">c</span>(<span class="st">&#39;地方合计&#39;</span>,<span class="st">&#39;北京&#39;</span>,<span class="st">&#39;天津&#39;</span>,<span class="st">&#39;河北&#39;</span>,<span class="st">&#39;山西&#39;</span>,<span class="st">&#39;内蒙古&#39;</span>,<span class="st">&#39;辽宁&#39;</span>,<span class="st">&#39;吉林&#39;</span>,<span class="st">&#39;黑龙江&#39;</span>,<span class="st">&#39;上海&#39;</span>,<span class="st">&#39;江苏&#39;</span>,<span class="st">&#39;浙江&#39;</span>,<span class="st">&#39;安徽&#39;</span>,<span class="st">&#39;福建&#39;</span>,<span class="st">&#39;江西&#39;</span>,<span class="st">&#39;山东&#39;</span>,<span class="st">&#39;河南&#39;</span>,<span class="st">&#39;湖北&#39;</span>,<span class="st">&#39;湖南&#39;</span>,<span class="st">&#39;广东&#39;</span>,<span class="st">&#39;广西&#39;</span>,<span class="st">&#39;海南&#39;</span>,<span class="st">&#39;重庆&#39;</span>,<span class="st">&#39;四川&#39;</span>,<span class="st">&#39;贵州&#39;</span>,<span class="st">&#39;云南&#39;</span>,<span class="st">&#39;西藏&#39;</span>,<span class="st">&#39;陕西&#39;</span>,<span class="st">&#39;甘肃&#39;</span>,<span class="st">&#39;青海&#39;</span>,<span class="st">&#39;宁夏&#39;</span>,<span class="st">&#39;新疆&#39;</span>)</span>
+<span id="cb11-41"><a href="#cb11-41"></a>pattern_pro &lt;-<span class="st"> </span><span class="kw">paste0</span>(levels_province,<span class="dt">collapse =</span> <span class="st">&quot;|&quot;</span>)</span>
+<span id="cb11-42"><a href="#cb11-42"></a></span>
+<span id="cb11-43"><a href="#cb11-43"></a><span class="co"># get the normal data table</span></span>
+<span id="cb11-44"><a href="#cb11-44"></a>tbl_rows &lt;-<span class="st"> </span>tbl_match <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb11-45"><a href="#cb11-45"></a><span class="st">  </span><span class="kw">add_column</span>(<span class="dt">row=</span><span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(.)) <span class="op">%&gt;%</span></span>
+<span id="cb11-46"><a href="#cb11-46"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">province=</span> <span class="kw">str_extract</span>(value, pattern_pro)) <span class="op">%&gt;%</span></span>
+<span id="cb11-47"><a href="#cb11-47"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>value) <span class="op">%&gt;%</span></span>
+<span id="cb11-48"><a href="#cb11-48"></a><span class="st">  </span><span class="kw">unnest</span>(pair) <span class="op">%&gt;%</span></span>
+<span id="cb11-49"><a href="#cb11-49"></a><span class="st">  </span><span class="kw">select</span>(row, province, num, cols) <span class="op">%&gt;%</span></span>
+<span id="cb11-50"><a href="#cb11-50"></a><span class="st">  </span><span class="kw">spread</span>(<span class="dt">key=</span>cols ,<span class="dt">value =</span> num)</span></code></pre></div>
+<p>获得的整齐表格如下：</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>tbl_rows  <span class="op">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a><span class="st">  </span><span class="kw">kable</span>()</span></code></pre></div>
+<table style="width:100%;">
+<colgroup>
+<col width="2%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="2%" />
+<col width="3%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="3%" />
+<col width="3%" />
+<col width="4%" />
+<col width="4%" />
+<col width="3%" />
+<col width="3%" />
+<col width="4%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">row</th>
+<th align="left">province</th>
+<th align="left">V01</th>
+<th align="left">V02</th>
+<th align="left">V03</th>
+<th align="left">V04</th>
+<th align="left">V05</th>
+<th align="left">V06</th>
+<th align="left">V07</th>
+<th align="left">V08</th>
+<th align="left">V09</th>
+<th align="left">V10</th>
+<th align="left">V11</th>
+<th align="left">V12</th>
+<th align="left">V13</th>
+<th align="left">V14</th>
+<th align="left">V15</th>
+<th align="left">V16</th>
+<th align="left">V17</th>
+<th align="left">V18</th>
+<th align="left">V19</th>
+<th align="left">V20</th>
+<th align="left">V21</th>
+<th align="left">V22</th>
+<th align="left">V23</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="left">地方合计</td>
+<td align="left">92733.68</td>
+<td align="left">10084.77</td>
+<td align="left">2.75</td>
+<td align="left">198.29</td>
+<td align="left">5267.26</td>
+<td align="left">15498.28</td>
+<td align="left">1885.88</td>
+<td align="left">1704.64</td>
+<td align="left">10606.92</td>
+<td align="left">6358.19</td>
+<td align="left">2566.79</td>
+<td align="left">7608.93</td>
+<td align="left">9520.99</td>
+<td align="left">7166.69</td>
+<td align="left">3547.26</td>
+<td align="left">1394.79</td>
+<td align="left">235.34</td>
+<td align="left">174.45</td>
+<td align="left">1289.74</td>
+<td align="left">3491.87</td>
+<td align="left">729.49</td>
+<td align="left">564.12</td>
+<td align="left">2836.25</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="left">北京</td>
+<td align="left">3245.23</td>
+<td align="left">261.38</td>
+<td align="left"></td>
+<td align="left">6.59</td>
+<td align="left">218.68</td>
+<td align="left">520.08</td>
+<td align="left">183.07</td>
+<td align="left">87.01</td>
+<td align="left">354.88</td>
+<td align="left">225.49</td>
+<td align="left">94.51</td>
+<td align="left">339.27</td>
+<td align="left">187.34</td>
+<td align="left">199.12</td>
+<td align="left">170.35</td>
+<td align="left">41.06</td>
+<td align="left">2.09</td>
+<td align="left">0.39</td>
+<td align="left">9.88</td>
+<td align="left">54.56</td>
+<td align="left">5.14</td>
+<td align="left"></td>
+<td align="left">284.34</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="left">天津</td>
+<td align="left">1796.33</td>
+<td align="left">117.81</td>
+<td align="left"></td>
+<td align="left">1.01</td>
+<td align="left">100.41</td>
+<td align="left">302.32</td>
+<td align="left">60.17</td>
+<td align="left">29.76</td>
+<td align="left">168.34</td>
+<td align="left">90.53</td>
+<td align="left">32.24</td>
+<td align="left">485.42</td>
+<td align="left">91.78</td>
+<td align="left">97.37</td>
+<td align="left">75.86</td>
+<td align="left">20.55</td>
+<td align="left">1.92</td>
+<td align="left"></td>
+<td align="left">25.31</td>
+<td align="left">20.82</td>
+<td align="left">2.18</td>
+<td align="left"></td>
+<td align="left">72.54</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="left">河北</td>
+<td align="left">3537.39</td>
+<td align="left">414.93</td>
+<td align="left"></td>
+<td align="left">11.55</td>
+<td align="left">200.98</td>
+<td align="left">652.11</td>
+<td align="left">33.22</td>
+<td align="left">50.45</td>
+<td align="left">426.23</td>
+<td align="left">302.75</td>
+<td align="left">105.48</td>
+<td align="left">239.37</td>
+<td align="left">366.10</td>
+<td align="left">261.36</td>
+<td align="left">82.86</td>
+<td align="left">54.17</td>
+<td align="left">2.08</td>
+<td align="left"></td>
+<td align="left">73.68</td>
+<td align="left">142.56</td>
+<td align="left">25.14</td>
+<td align="left">6.61</td>
+<td align="left">85.75</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="left">山西</td>
+<td align="left">2363.85</td>
+<td align="left">251.58</td>
+<td align="left"></td>
+<td align="left">4.41</td>
+<td align="left">130.31</td>
+<td align="left">421.79</td>
+<td align="left">27.17</td>
+<td align="left">48.17</td>
+<td align="left">321.60</td>
+<td align="left">159.62</td>
+<td align="left">82.18</td>
+<td align="left">142.33</td>
+<td align="left">241.45</td>
+<td align="left">178.93</td>
+<td align="left">44.84</td>
+<td align="left">22.99</td>
+<td align="left">8.57</td>
+<td align="left">0.01</td>
+<td align="left">134.76</td>
+<td align="left">84.85</td>
+<td align="left">17.47</td>
+<td align="left">3.07</td>
+<td align="left">37.77</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="left">内蒙古</td>
+<td align="left">2989.21</td>
+<td align="left">304.53</td>
+<td align="left">0.06</td>
+<td align="left">4.46</td>
+<td align="left">145.88</td>
+<td align="left">390.69</td>
+<td align="left">28.21</td>
+<td align="left">68.78</td>
+<td align="left">363.97</td>
+<td align="left">164.59</td>
+<td align="left">117.55</td>
+<td align="left">301.40</td>
+<td align="left">391.68</td>
+<td align="left">281.48</td>
+<td align="left">71.04</td>
+<td align="left">25.82</td>
+<td align="left">4.30</td>
+<td align="left"></td>
+<td align="left">70.25</td>
+<td align="left">140.35</td>
+<td align="left">59.70</td>
+<td align="left">10.22</td>
+<td align="left">44.23</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="left">辽宁</td>
+<td align="left">3905.85</td>
+<td align="left">415.23</td>
+<td align="left"></td>
+<td align="left">11.43</td>
+<td align="left">210.29</td>
+<td align="left">544.09</td>
+<td align="left">87.20</td>
+<td align="left">68.60</td>
+<td align="left">657.36</td>
+<td align="left">182.07</td>
+<td align="left">74.20</td>
+<td align="left">442.58</td>
+<td align="left">329.20</td>
+<td align="left">220.53</td>
+<td align="left">229.09</td>
+<td align="left">56.39</td>
+<td align="left">13.32</td>
+<td align="left">0.05</td>
+<td align="left">74.04</td>
+<td align="left">152.44</td>
+<td align="left">36.43</td>
+<td align="left">25.30</td>
+<td align="left">76.00</td>
+</tr>
+<tr class="even">
+<td align="right">8</td>
+<td align="left">吉林</td>
+<td align="left">2201.74</td>
+<td align="left">231.40</td>
+<td align="left"></td>
+<td align="left">4.48</td>
+<td align="left">118.81</td>
+<td align="left">319.82</td>
+<td align="left">21.18</td>
+<td align="left">44.25</td>
+<td align="left">298.99</td>
+<td align="left">143.87</td>
+<td align="left">102.42</td>
+<td align="left">154.17</td>
+<td align="left">255.57</td>
+<td align="left">149.79</td>
+<td align="left">73.82</td>
+<td align="left">22.46</td>
+<td align="left">7.12</td>
+<td align="left">0.60</td>
+<td align="left">24.97</td>
+<td align="left">124.15</td>
+<td align="left">55.45</td>
+<td align="left">34.52</td>
+<td align="left">13.90</td>
+</tr>
+<tr class="odd">
+<td align="right">9</td>
+<td align="left">黑龙江</td>
+<td align="left">2794.08</td>
+<td align="left">256.37</td>
+<td align="left">0.09</td>
+<td align="left">5.13</td>
+<td align="left">141.22</td>
+<td align="left">373.83</td>
+<td align="left">33.23</td>
+<td align="left">44.94</td>
+<td align="left">392.05</td>
+<td align="left">170.78</td>
+<td align="left">92.27</td>
+<td align="left">179.71</td>
+<td align="left">355.98</td>
+<td align="left">249.88</td>
+<td align="left">108.67</td>
+<td align="left">28.72</td>
+<td align="left">2.56</td>
+<td align="left">0.05</td>
+<td align="left">34.41</td>
+<td align="left">183.17</td>
+<td align="left">69</td>
+<td align="left">3.14</td>
+<td align="left">68.89</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+<td align="left">上海</td>
+<td align="left">3914.88</td>
+<td align="left">236.11</td>
+<td align="left"></td>
+<td align="left">7.61</td>
+<td align="left">206.11</td>
+<td align="left">549.24</td>
+<td align="left">218.50</td>
+<td align="left">68.80</td>
+<td align="left">417.50</td>
+<td align="left">190.03</td>
+<td align="left">51.62</td>
+<td align="left">579.29</td>
+<td align="left">161.54</td>
+<td align="left">137.04</td>
+<td align="left">379.53</td>
+<td align="left">51.13</td>
+<td align="left">13.81</td>
+<td align="left"></td>
+<td align="left">11.86</td>
+<td align="left">82.46</td>
+<td align="left">16.90</td>
+<td align="left">55.30</td>
+<td align="left">480.51</td>
+</tr>
+<tr class="odd">
+<td align="right">11</td>
+<td align="left">江苏</td>
+<td align="left">6221.72</td>
+<td align="left">748.45</td>
+<td align="left"></td>
+<td align="left">18.46</td>
+<td align="left">371.40</td>
+<td align="left">1093.22</td>
+<td align="left">213.40</td>
+<td align="left">116.86</td>
+<td align="left">481.65</td>
+<td align="left">349.86</td>
+<td align="left">170.37</td>
+<td align="left">812.06</td>
+<td align="left">618.13</td>
+<td align="left">391.69</td>
+<td align="left">294.39</td>
+<td align="left">128.56</td>
+<td align="left">27.45</td>
+<td align="left">1.59</td>
+<td align="left">48.16</td>
+<td align="left">118.92</td>
+<td align="left">29.34</td>
+<td align="left">4.57</td>
+<td align="left">183.18</td>
+</tr>
+<tr class="even">
+<td align="right">12</td>
+<td align="left">浙江</td>
+<td align="left">3842.59</td>
+<td align="left">471.55</td>
+<td align="left"></td>
+<td align="left">7.54</td>
+<td align="left">290.87</td>
+<td align="left">751.42</td>
+<td align="left">143.90</td>
+<td align="left">85.09</td>
+<td align="left">291.82</td>
+<td align="left">278.98</td>
+<td align="left">78.11</td>
+<td align="left">338.43</td>
+<td align="left">373.32</td>
+<td align="left">273.99</td>
+<td align="left">137.81</td>
+<td align="left">96.97</td>
+<td align="left">5.78</td>
+<td align="left">2.80</td>
+<td align="left">30.43</td>
+<td align="left">58.05</td>
+<td align="left">13.11</td>
+<td align="left">3.20</td>
+<td align="left">109.42</td>
+</tr>
+<tr class="odd">
+<td align="right">13</td>
+<td align="left">安徽</td>
+<td align="left">3302.99</td>
+<td align="left">345.34</td>
+<td align="left"></td>
+<td align="left">5.57</td>
+<td align="left">128.58</td>
+<td align="left">564.71</td>
+<td align="left">77.03</td>
+<td align="left">62.35</td>
+<td align="left">392.98</td>
+<td align="left">277.23</td>
+<td align="left">81.96</td>
+<td align="left">280.76</td>
+<td align="left">351.87</td>
+<td align="left">219.59</td>
+<td align="left">125.40</td>
+<td align="left">65.63</td>
+<td align="left">8.06</td>
+<td align="left"></td>
+<td align="left">40.87</td>
+<td align="left">161.22</td>
+<td align="left">31.21</td>
+<td align="left">11.90</td>
+<td align="left">70.76</td>
+</tr>
+<tr class="even">
+<td align="right">14</td>
+<td align="left">福建</td>
+<td align="left">2198.18</td>
+<td align="left">247.47</td>
+<td align="left"></td>
+<td align="left">4.76</td>
+<td align="left">144.74</td>
+<td align="left">406.73</td>
+<td align="left">40.48</td>
+<td align="left">35.86</td>
+<td align="left">184.92</td>
+<td align="left">159.30</td>
+<td align="left">37.95</td>
+<td align="left">146.24</td>
+<td align="left">207.89</td>
+<td align="left">240.05</td>
+<td align="left">95.71</td>
+<td align="left">49.63</td>
+<td align="left">1.58</td>
+<td align="left"></td>
+<td align="left">25.25</td>
+<td align="left">56.45</td>
+<td align="left">13.78</td>
+<td align="left">2.98</td>
+<td align="left">96.41</td>
+</tr>
+<tr class="odd">
+<td align="right">15</td>
+<td align="left">江西</td>
+<td align="left">2534.60</td>
+<td align="left">258.00</td>
+<td align="left"></td>
+<td align="left">5.03</td>
+<td align="left">123.90</td>
+<td align="left">474.43</td>
+<td align="left">21.32</td>
+<td align="left">39.66</td>
+<td align="left">272.75</td>
+<td align="left">196.32</td>
+<td align="left">43.76</td>
+<td align="left">125.34</td>
+<td align="left">287.99</td>
+<td align="left">218.05</td>
+<td align="left">157.36</td>
+<td align="left">38.16</td>
+<td align="left">2.06</td>
+<td align="left"></td>
+<td align="left">28.51</td>
+<td align="left">108.28</td>
+<td align="left">47.11</td>
+<td align="left">12.51</td>
+<td align="left">74.07</td>
+</tr>
+<tr class="even">
+<td align="right">16</td>
+<td align="left">山东</td>
+<td align="left">5002.07</td>
+<td align="left">618.48</td>
+<td align="left"></td>
+<td align="left">15.13</td>
+<td align="left">274.69</td>
+<td align="left">1047.90</td>
+<td align="left">108.62</td>
+<td align="left">91.57</td>
+<td align="left">501.54</td>
+<td align="left">360.36</td>
+<td align="left">113.95</td>
+<td align="left">401.70</td>
+<td align="left">564.00</td>
+<td align="left">294.91</td>
+<td align="left">184.41</td>
+<td align="left">119.34</td>
+<td align="left">21.17</td>
+<td align="left">0.52</td>
+<td align="left">68.15</td>
+<td align="left">67.56</td>
+<td align="left">35.78</td>
+<td align="left">32.13</td>
+<td align="left">80.18</td>
+</tr>
+<tr class="odd">
+<td align="right">17</td>
+<td align="left">河南</td>
+<td align="left">4248.82</td>
+<td align="left">559.02</td>
+<td align="left"></td>
+<td align="left">5.67</td>
+<td align="left">204.80</td>
+<td align="left">857.14</td>
+<td align="left">56.59</td>
+<td align="left">57.54</td>
+<td align="left">547.96</td>
+<td align="left">361.48</td>
+<td align="left">95.60</td>
+<td align="left">191.30</td>
+<td align="left">480.48</td>
+<td align="left">281.21</td>
+<td align="left">126.55</td>
+<td align="left">67.60</td>
+<td align="left">16.83</td>
+<td align="left">3.42</td>
+<td align="left">63.54</td>
+<td align="left">142.64</td>
+<td align="left">39.85</td>
+<td align="left">26.41</td>
+<td align="left">63.17</td>
+</tr>
+<tr class="even">
+<td align="right">18</td>
+<td align="left">湖北</td>
+<td align="left">3214.74</td>
+<td align="left">394.95</td>
+<td align="left"></td>
+<td align="left">2.51</td>
+<td align="left">188.40</td>
+<td align="left">488.16</td>
+<td align="left">44.19</td>
+<td align="left">47.09</td>
+<td align="left">449.29</td>
+<td align="left">247.30</td>
+<td align="left">101.11</td>
+<td align="left">161.33</td>
+<td align="left">376.23</td>
+<td align="left">255.18</td>
+<td align="left">112.46</td>
+<td align="left">52.52</td>
+<td align="left">7.28</td>
+<td align="left">1.21</td>
+<td align="left">45.39</td>
+<td align="left">103.06</td>
+<td align="left">35.34</td>
+<td align="left">12.68</td>
+<td align="left">89.05</td>
+</tr>
+<tr class="odd">
+<td align="right">19</td>
+<td align="left">湖南</td>
+<td align="left">3520.76</td>
+<td align="left">466.74</td>
+<td align="left">0.01</td>
+<td align="left">9.56</td>
+<td align="left">174.42</td>
+<td align="left">540.83</td>
+<td align="left">41.96</td>
+<td align="left">44.87</td>
+<td align="left">484.44</td>
+<td align="left">256.76</td>
+<td align="left">85.26</td>
+<td align="left">276.00</td>
+<td align="left">394.26</td>
+<td align="left">301.31</td>
+<td align="left">119.88</td>
+<td align="left">53.46</td>
+<td align="left">3.87</td>
+<td align="left"></td>
+<td align="left">49.88</td>
+<td align="left">126.76</td>
+<td align="left">29.70</td>
+<td align="left">13.47</td>
+<td align="left">47.31</td>
+</tr>
+<tr class="even">
+<td align="right">20</td>
+<td align="left">广东</td>
+<td align="left">6712.40</td>
+<td align="left">807.41</td>
+<td align="left">0.04</td>
+<td align="left">13.04</td>
+<td align="left">569.85</td>
+<td align="left">1227.87</td>
+<td align="left">203.92</td>
+<td align="left">170.56</td>
+<td align="left">548.65</td>
+<td align="left">433.75</td>
+<td align="left">232.62</td>
+<td align="left">518.16</td>
+<td align="left">420.34</td>
+<td align="left">533.40</td>
+<td align="left">147.12</td>
+<td align="left">91.88</td>
+<td align="left">14.61</td>
+<td align="left">18.61</td>
+<td align="left">53.77</td>
+<td align="left">146.42</td>
+<td align="left">25.72</td>
+<td align="left">152.31</td>
+<td align="left">382.36</td>
+</tr>
+<tr class="odd">
+<td align="right">21</td>
+<td align="left">广西</td>
+<td align="left">2545.28</td>
+<td align="left">322.18</td>
+<td align="left"></td>
+<td align="left">8.21</td>
+<td align="left">139.44</td>
+<td align="left">456.89</td>
+<td align="left">28.25</td>
+<td align="left">37.48</td>
+<td align="left">250.64</td>
+<td align="left">232.88</td>
+<td align="left">53.90</td>
+<td align="left">118.73</td>
+<td align="left">314.86</td>
+<td align="left">248.98</td>
+<td align="left">88.81</td>
+<td align="left">23.69</td>
+<td align="left">8.04</td>
+<td align="left"></td>
+<td align="left">39.49</td>
+<td align="left">106.85</td>
+<td align="left">13.66</td>
+<td align="left">12.75</td>
+<td align="left">39.56</td>
+</tr>
+<tr class="even">
+<td align="right">22</td>
+<td align="left">海南</td>
+<td align="left">778.80</td>
+<td align="left">82.02</td>
+<td align="left">0.96</td>
+<td align="left">4.46</td>
+<td align="left">53.23</td>
+<td align="left">127.27</td>
+<td align="left">9.83</td>
+<td align="left">16.60</td>
+<td align="left">94.04</td>
+<td align="left">50.30</td>
+<td align="left">23.97</td>
+<td align="left">39.57</td>
+<td align="left">105.63</td>
+<td align="left">53.19</td>
+<td align="left">21.44</td>
+<td align="left">10.66</td>
+<td align="left">0.25</td>
+<td align="left"></td>
+<td align="left">11.29</td>
+<td align="left">34.52</td>
+<td align="left">1.95</td>
+<td align="left">3.88</td>
+<td align="left">33.74</td>
+</tr>
+<tr class="odd">
+<td align="right">23</td>
+<td align="left">重庆</td>
+<td align="left">2570.24</td>
+<td align="left">224.58</td>
+<td align="left"></td>
+<td align="left">8.88</td>
+<td align="left">124.93</td>
+<td align="left">318.70</td>
+<td align="left">25.04</td>
+<td align="left">31.16</td>
+<td align="left">338.76</td>
+<td align="left">143.70</td>
+<td align="left">100.81</td>
+<td align="left">394.46</td>
+<td align="left">198.91</td>
+<td align="left">186.23</td>
+<td align="left">187.81</td>
+<td align="left">40.22</td>
+<td align="left">12.63</td>
+<td align="left">0.01</td>
+<td align="left">44.02</td>
+<td align="left">157.47</td>
+<td align="left">15.61</td>
+<td align="left">2.58</td>
+<td align="left">13.73</td>
+</tr>
+<tr class="even">
+<td align="right">24</td>
+<td align="left">四川</td>
+<td align="left">4674.92</td>
+<td align="left">485.11</td>
+<td align="left"></td>
+<td align="left">10.72</td>
+<td align="left">246.07</td>
+<td align="left">684.66</td>
+<td align="left">45.75</td>
+<td align="left">87.35</td>
+<td align="left">645.79</td>
+<td align="left">372.96</td>
+<td align="left">115.80</td>
+<td align="left">268.56</td>
+<td align="left">545.70</td>
+<td align="left">364.89</td>
+<td align="left">157.77</td>
+<td align="left">63.25</td>
+<td align="left">11.19</td>
+<td align="left">132.49</td>
+<td align="left">57.28</td>
+<td align="left">231.26</td>
+<td align="left">38.06</td>
+<td align="left">23.86</td>
+<td align="left">86.39</td>
+</tr>
+<tr class="odd">
+<td align="right">25</td>
+<td align="left">贵州</td>
+<td align="left">2249.40</td>
+<td align="left">307.21</td>
+<td align="left"></td>
+<td align="left">4.15</td>
+<td align="left">117.31</td>
+<td align="left">376.86</td>
+<td align="left">21.68</td>
+<td align="left">35.31</td>
+<td align="left">194.78</td>
+<td align="left">173.26</td>
+<td align="left">55.45</td>
+<td align="left">65.52</td>
+<td align="left">278.47</td>
+<td align="left">305.16</td>
+<td align="left">55.18</td>
+<td align="left">19.81</td>
+<td align="left">0.44</td>
+<td align="left"></td>
+<td align="left">32.72</td>
+<td align="left">121.65</td>
+<td align="left">8.31</td>
+<td align="left">13.35</td>
+<td align="left">62.77</td>
+</tr>
+<tr class="even">
+<td align="right">26</td>
+<td align="left">云南</td>
+<td align="left">2929.60</td>
+<td align="left">282.05</td>
+<td align="left">0.23</td>
+<td align="left">6.32</td>
+<td align="left">165.32</td>
+<td align="left">483.00</td>
+<td align="left">28.30</td>
+<td align="left">45.34</td>
+<td align="left">386.50</td>
+<td align="left">236.98</td>
+<td align="left">95.86</td>
+<td align="left">122.96</td>
+<td align="left">409.80</td>
+<td align="left">276.19</td>
+<td align="left">50.40</td>
+<td align="left">33.72</td>
+<td align="left">7.51</td>
+<td align="left">0.01</td>
+<td align="left">41.60</td>
+<td align="left">151.71</td>
+<td align="left">8.20</td>
+<td align="left">53.37</td>
+<td align="left">44.23</td>
+</tr>
+<tr class="odd">
+<td align="right">27</td>
+<td align="left">西藏</td>
+<td align="left">758.11</td>
+<td align="left">95.94</td>
+<td align="left">1.10</td>
+<td align="left">1.14</td>
+<td align="left">51.76</td>
+<td align="left">77.81</td>
+<td align="left">3.38</td>
+<td align="left">18.91</td>
+<td align="left">57.68</td>
+<td align="left">35.30</td>
+<td align="left">16.05</td>
+<td align="left">21.66</td>
+<td align="left">126.53</td>
+<td align="left">77.88</td>
+<td align="left">49.60</td>
+<td align="left">5.52</td>
+<td align="left">0.37</td>
+<td align="left">0.08</td>
+<td align="left">6.21</td>
+<td align="left">60.79</td>
+<td align="left">1.74</td>
+<td align="left"></td>
+<td align="left">48.68</td>
+</tr>
+<tr class="even">
+<td align="right">28</td>
+<td align="left">陕西</td>
+<td align="left">2930.81</td>
+<td align="left">341.32</td>
+<td align="left"></td>
+<td align="left">3.36</td>
+<td align="left">128.06</td>
+<td align="left">529.46</td>
+<td align="left">29.01</td>
+<td align="left">61.27</td>
+<td align="left">365.43</td>
+<td align="left">197.61</td>
+<td align="left">96.13</td>
+<td align="left">147.13</td>
+<td align="left">333.79</td>
+<td align="left">313.42</td>
+<td align="left">76.27</td>
+<td align="left">41.59</td>
+<td align="left">5.07</td>
+<td align="left">2.90</td>
+<td align="left">44.67</td>
+<td align="left">150.28</td>
+<td align="left">18.97</td>
+<td align="left">10.57</td>
+<td align="left">34.51</td>
+</tr>
+<tr class="odd">
+<td align="right">29</td>
+<td align="left">甘肃</td>
+<td align="left">1791.24</td>
+<td align="left">174.92</td>
+<td align="left"></td>
+<td align="left">1.85</td>
+<td align="left">80.31</td>
+<td align="left">284.33</td>
+<td align="left">13.22</td>
+<td align="left">33.07</td>
+<td align="left">279.22</td>
+<td align="left">143.18</td>
+<td align="left">84.99</td>
+<td align="left">65.88</td>
+<td align="left">237.66</td>
+<td align="left">158.91</td>
+<td align="left">29.31</td>
+<td align="left">16.95</td>
+<td align="left">2.47</td>
+<td align="left">8.77</td>
+<td align="left">41.06</td>
+<td align="left">92.58</td>
+<td align="left">9.24</td>
+<td align="left">8.83</td>
+<td align="left">24.49</td>
+</tr>
+<tr class="even">
+<td align="right">30</td>
+<td align="left">青海</td>
+<td align="left">967.47</td>
+<td align="left">65.40</td>
+<td align="left"></td>
+<td align="left">0.67</td>
+<td align="left">35.10</td>
+<td align="left">130.11</td>
+<td align="left">3.76</td>
+<td align="left">14.32</td>
+<td align="left">163.57</td>
+<td align="left">47.44</td>
+<td align="left">41.76</td>
+<td align="left">27.98</td>
+<td align="left">104.74</td>
+<td align="left">148.58</td>
+<td align="left">25.37</td>
+<td align="left">10.91</td>
+<td align="left">6.98</td>
+<td align="left">0.09</td>
+<td align="left">16.12</td>
+<td align="left">106.15</td>
+<td align="left">4.75</td>
+<td align="left">8.19</td>
+<td align="left">5.49</td>
+</tr>
+<tr class="odd">
+<td align="right">31</td>
+<td align="left">宁夏</td>
+<td align="left">705.91</td>
+<td align="left">51.96</td>
+<td align="left"></td>
+<td align="left">0.85</td>
+<td align="left">35.12</td>
+<td align="left">103.02</td>
+<td align="left">7.87</td>
+<td align="left">13.94</td>
+<td align="left">71.95</td>
+<td align="left">41.09</td>
+<td align="left">35.23</td>
+<td align="left">81.51</td>
+<td align="left">112.19</td>
+<td align="left">41.54</td>
+<td align="left">20.54</td>
+<td align="left">16.18</td>
+<td align="left">6.95</td>
+<td align="left"></td>
+<td align="left">7.11</td>
+<td align="left">33.86</td>
+<td align="left">2.72</td>
+<td align="left">7.17</td>
+<td align="left">15.13</td>
+</tr>
+<tr class="even">
+<td align="right">32</td>
+<td align="left">新疆</td>
+<td align="left">2284.49</td>
+<td align="left">245.36</td>
+<td align="left">0.26</td>
+<td align="left">3.77</td>
+<td align="left">146.28</td>
+<td align="left">399.80</td>
+<td align="left">26.43</td>
+<td align="left">47.70</td>
+<td align="left">201.64</td>
+<td align="left">132.43</td>
+<td align="left">53.67</td>
+<td align="left">140.10</td>
+<td align="left">297.59</td>
+<td align="left">206.83</td>
+<td align="left">47.60</td>
+<td align="left">25.24</td>
+<td align="left">9.00</td>
+<td align="left">0.85</td>
+<td align="left">35.06</td>
+<td align="left">170.04</td>
+<td align="left">17.91</td>
+<td align="left">9.23</td>
+<td align="left">67.70</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="目标2获得原始文件的列标题" class="section level1">
+<h1><span class="header-section-number">3</span> 目标2：获得原始文件的列标题</h1>
+<p>R代码如下：</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="co"># get the header from raw html</span></span>
+<span id="cb13-2"><a href="#cb13-2"></a><span class="co">### the pattern</span></span>
+<span id="cb13-3"><a href="#cb13-3"></a>head_index &lt;-<span class="st"> </span><span class="kw">which</span>(<span class="kw">unlist</span>(<span class="kw">str_detect</span>(tbl_raw<span class="op">$</span>X1, <span class="st">&quot;地方合计&quot;</span>)))<span class="op">-</span><span class="dv">1</span></span>
+<span id="cb13-4"><a href="#cb13-4"></a></span>
+<span id="cb13-5"><a href="#cb13-5"></a><span class="co">### be careful the extra case: one line header or two lines header ?</span></span>
+<span id="cb13-6"><a href="#cb13-6"></a>head_index &lt;-<span class="st"> </span>head_index</span>
+<span id="cb13-7"><a href="#cb13-7"></a></span>
+<span id="cb13-8"><a href="#cb13-8"></a><span class="co">### get the chn names</span></span>
+<span id="cb13-9"><a href="#cb13-9"></a>vars_index &lt;-<span class="st">  </span>tbl_raw <span class="op">%&gt;%</span></span>
+<span id="cb13-10"><a href="#cb13-10"></a><span class="st">  </span>.[head_index,] <span class="op">%&gt;%</span></span>
+<span id="cb13-11"><a href="#cb13-11"></a><span class="st">  </span><span class="kw">gsub</span>(<span class="st">&quot;(\u00A0){1,20}&quot;</span>, <span class="st">&quot;&amp;&quot;</span>, .) <span class="op">%&gt;%</span></span>
+<span id="cb13-12"><a href="#cb13-12"></a><span class="st">  </span><span class="kw">str_split</span>(., <span class="dt">pattern =</span> <span class="st">&quot;&amp;&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb13-13"><a href="#cb13-13"></a><span class="st">  </span><span class="kw">unlist</span>() <span class="op">%&gt;%</span></span>
+<span id="cb13-14"><a href="#cb13-14"></a><span class="st">  </span><span class="kw">c</span>(<span class="st">&quot;序号&quot;</span>, .)</span>
+<span id="cb13-15"><a href="#cb13-15"></a></span>
+<span id="cb13-16"><a href="#cb13-16"></a><span class="co"># rename header</span></span>
+<span id="cb13-17"><a href="#cb13-17"></a>tbl_chn &lt;-<span class="st"> </span>tbl_rows <span class="op">%&gt;%</span></span>
+<span id="cb13-18"><a href="#cb13-18"></a><span class="st">  </span><span class="kw">rename_at</span>(<span class="kw">all_of</span>(<span class="kw">names</span>(.)), <span class="op">~</span><span class="kw">all_of</span>(vars_index))</span></code></pre></div>
+<p>获得的列名称的最终表格如下：</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>tbl_chn  <span class="op">%&gt;%</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a><span class="st">  </span><span class="kw">kable</span>()</span></code></pre></div>
+<table style="width:100%;">
+<colgroup>
+<col width="1%" />
+<col width="2%" />
+<col width="4%" />
+<col width="4%" />
+<col width="1%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="4%" />
+<col width="4%" />
+<col width="2%" />
+<col width="2%" />
+<col width="4%" />
+<col width="3%" />
+<col width="2%" />
+<col width="7%" />
+<col width="5%" />
+<col width="5%" />
+<col width="6%" />
+<col width="5%" />
+<col width="4%" />
+<col width="6%" />
+<col width="5%" />
+<col width="2%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">序号</th>
+<th align="left">地区</th>
+<th align="left">一般预算支出</th>
+<th align="left">一般公共服务</th>
+<th align="left">外交</th>
+<th align="left">国防</th>
+<th align="left">公共安全</th>
+<th align="left">教育</th>
+<th align="left">科学技术</th>
+<th align="left">文化体育与传媒</th>
+<th align="left">社会保障和就业</th>
+<th align="left">医疗卫生</th>
+<th align="left">节能保护</th>
+<th align="left">城乡社区事务</th>
+<th align="left">农林水事务</th>
+<th align="left">交通运输</th>
+<th align="left">资源勘探电力信息等事务</th>
+<th align="left">商业服务业等事务</th>
+<th align="left">金融监管等事务支出</th>
+<th align="left">地震灾后恢复重建支出</th>
+<th align="left">国土资源气象等事务</th>
+<th align="left">住房保障支出</th>
+<th align="left">粮油物资储备管理事务</th>
+<th align="left">国债还本付息支出</th>
+<th align="left">其他支出</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="left">地方合计</td>
+<td align="left">92733.68</td>
+<td align="left">10084.77</td>
+<td align="left">2.75</td>
+<td align="left">198.29</td>
+<td align="left">5267.26</td>
+<td align="left">15498.28</td>
+<td align="left">1885.88</td>
+<td align="left">1704.64</td>
+<td align="left">10606.92</td>
+<td align="left">6358.19</td>
+<td align="left">2566.79</td>
+<td align="left">7608.93</td>
+<td align="left">9520.99</td>
+<td align="left">7166.69</td>
+<td align="left">3547.26</td>
+<td align="left">1394.79</td>
+<td align="left">235.34</td>
+<td align="left">174.45</td>
+<td align="left">1289.74</td>
+<td align="left">3491.87</td>
+<td align="left">729.49</td>
+<td align="left">564.12</td>
+<td align="left">2836.25</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="left">北京</td>
+<td align="left">3245.23</td>
+<td align="left">261.38</td>
+<td align="left"></td>
+<td align="left">6.59</td>
+<td align="left">218.68</td>
+<td align="left">520.08</td>
+<td align="left">183.07</td>
+<td align="left">87.01</td>
+<td align="left">354.88</td>
+<td align="left">225.49</td>
+<td align="left">94.51</td>
+<td align="left">339.27</td>
+<td align="left">187.34</td>
+<td align="left">199.12</td>
+<td align="left">170.35</td>
+<td align="left">41.06</td>
+<td align="left">2.09</td>
+<td align="left">0.39</td>
+<td align="left">9.88</td>
+<td align="left">54.56</td>
+<td align="left">5.14</td>
+<td align="left"></td>
+<td align="left">284.34</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="left">天津</td>
+<td align="left">1796.33</td>
+<td align="left">117.81</td>
+<td align="left"></td>
+<td align="left">1.01</td>
+<td align="left">100.41</td>
+<td align="left">302.32</td>
+<td align="left">60.17</td>
+<td align="left">29.76</td>
+<td align="left">168.34</td>
+<td align="left">90.53</td>
+<td align="left">32.24</td>
+<td align="left">485.42</td>
+<td align="left">91.78</td>
+<td align="left">97.37</td>
+<td align="left">75.86</td>
+<td align="left">20.55</td>
+<td align="left">1.92</td>
+<td align="left"></td>
+<td align="left">25.31</td>
+<td align="left">20.82</td>
+<td align="left">2.18</td>
+<td align="left"></td>
+<td align="left">72.54</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="left">河北</td>
+<td align="left">3537.39</td>
+<td align="left">414.93</td>
+<td align="left"></td>
+<td align="left">11.55</td>
+<td align="left">200.98</td>
+<td align="left">652.11</td>
+<td align="left">33.22</td>
+<td align="left">50.45</td>
+<td align="left">426.23</td>
+<td align="left">302.75</td>
+<td align="left">105.48</td>
+<td align="left">239.37</td>
+<td align="left">366.10</td>
+<td align="left">261.36</td>
+<td align="left">82.86</td>
+<td align="left">54.17</td>
+<td align="left">2.08</td>
+<td align="left"></td>
+<td align="left">73.68</td>
+<td align="left">142.56</td>
+<td align="left">25.14</td>
+<td align="left">6.61</td>
+<td align="left">85.75</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="left">山西</td>
+<td align="left">2363.85</td>
+<td align="left">251.58</td>
+<td align="left"></td>
+<td align="left">4.41</td>
+<td align="left">130.31</td>
+<td align="left">421.79</td>
+<td align="left">27.17</td>
+<td align="left">48.17</td>
+<td align="left">321.60</td>
+<td align="left">159.62</td>
+<td align="left">82.18</td>
+<td align="left">142.33</td>
+<td align="left">241.45</td>
+<td align="left">178.93</td>
+<td align="left">44.84</td>
+<td align="left">22.99</td>
+<td align="left">8.57</td>
+<td align="left">0.01</td>
+<td align="left">134.76</td>
+<td align="left">84.85</td>
+<td align="left">17.47</td>
+<td align="left">3.07</td>
+<td align="left">37.77</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="left">内蒙古</td>
+<td align="left">2989.21</td>
+<td align="left">304.53</td>
+<td align="left">0.06</td>
+<td align="left">4.46</td>
+<td align="left">145.88</td>
+<td align="left">390.69</td>
+<td align="left">28.21</td>
+<td align="left">68.78</td>
+<td align="left">363.97</td>
+<td align="left">164.59</td>
+<td align="left">117.55</td>
+<td align="left">301.40</td>
+<td align="left">391.68</td>
+<td align="left">281.48</td>
+<td align="left">71.04</td>
+<td align="left">25.82</td>
+<td align="left">4.30</td>
+<td align="left"></td>
+<td align="left">70.25</td>
+<td align="left">140.35</td>
+<td align="left">59.70</td>
+<td align="left">10.22</td>
+<td align="left">44.23</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="left">辽宁</td>
+<td align="left">3905.85</td>
+<td align="left">415.23</td>
+<td align="left"></td>
+<td align="left">11.43</td>
+<td align="left">210.29</td>
+<td align="left">544.09</td>
+<td align="left">87.20</td>
+<td align="left">68.60</td>
+<td align="left">657.36</td>
+<td align="left">182.07</td>
+<td align="left">74.20</td>
+<td align="left">442.58</td>
+<td align="left">329.20</td>
+<td align="left">220.53</td>
+<td align="left">229.09</td>
+<td align="left">56.39</td>
+<td align="left">13.32</td>
+<td align="left">0.05</td>
+<td align="left">74.04</td>
+<td align="left">152.44</td>
+<td align="left">36.43</td>
+<td align="left">25.30</td>
+<td align="left">76.00</td>
+</tr>
+<tr class="even">
+<td align="right">8</td>
+<td align="left">吉林</td>
+<td align="left">2201.74</td>
+<td align="left">231.40</td>
+<td align="left"></td>
+<td align="left">4.48</td>
+<td align="left">118.81</td>
+<td align="left">319.82</td>
+<td align="left">21.18</td>
+<td align="left">44.25</td>
+<td align="left">298.99</td>
+<td align="left">143.87</td>
+<td align="left">102.42</td>
+<td align="left">154.17</td>
+<td align="left">255.57</td>
+<td align="left">149.79</td>
+<td align="left">73.82</td>
+<td align="left">22.46</td>
+<td align="left">7.12</td>
+<td align="left">0.60</td>
+<td align="left">24.97</td>
+<td align="left">124.15</td>
+<td align="left">55.45</td>
+<td align="left">34.52</td>
+<td align="left">13.90</td>
+</tr>
+<tr class="odd">
+<td align="right">9</td>
+<td align="left">黑龙江</td>
+<td align="left">2794.08</td>
+<td align="left">256.37</td>
+<td align="left">0.09</td>
+<td align="left">5.13</td>
+<td align="left">141.22</td>
+<td align="left">373.83</td>
+<td align="left">33.23</td>
+<td align="left">44.94</td>
+<td align="left">392.05</td>
+<td align="left">170.78</td>
+<td align="left">92.27</td>
+<td align="left">179.71</td>
+<td align="left">355.98</td>
+<td align="left">249.88</td>
+<td align="left">108.67</td>
+<td align="left">28.72</td>
+<td align="left">2.56</td>
+<td align="left">0.05</td>
+<td align="left">34.41</td>
+<td align="left">183.17</td>
+<td align="left">69</td>
+<td align="left">3.14</td>
+<td align="left">68.89</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+<td align="left">上海</td>
+<td align="left">3914.88</td>
+<td align="left">236.11</td>
+<td align="left"></td>
+<td align="left">7.61</td>
+<td align="left">206.11</td>
+<td align="left">549.24</td>
+<td align="left">218.50</td>
+<td align="left">68.80</td>
+<td align="left">417.50</td>
+<td align="left">190.03</td>
+<td align="left">51.62</td>
+<td align="left">579.29</td>
+<td align="left">161.54</td>
+<td align="left">137.04</td>
+<td align="left">379.53</td>
+<td align="left">51.13</td>
+<td align="left">13.81</td>
+<td align="left"></td>
+<td align="left">11.86</td>
+<td align="left">82.46</td>
+<td align="left">16.90</td>
+<td align="left">55.30</td>
+<td align="left">480.51</td>
+</tr>
+<tr class="odd">
+<td align="right">11</td>
+<td align="left">江苏</td>
+<td align="left">6221.72</td>
+<td align="left">748.45</td>
+<td align="left"></td>
+<td align="left">18.46</td>
+<td align="left">371.40</td>
+<td align="left">1093.22</td>
+<td align="left">213.40</td>
+<td align="left">116.86</td>
+<td align="left">481.65</td>
+<td align="left">349.86</td>
+<td align="left">170.37</td>
+<td align="left">812.06</td>
+<td align="left">618.13</td>
+<td align="left">391.69</td>
+<td align="left">294.39</td>
+<td align="left">128.56</td>
+<td align="left">27.45</td>
+<td align="left">1.59</td>
+<td align="left">48.16</td>
+<td align="left">118.92</td>
+<td align="left">29.34</td>
+<td align="left">4.57</td>
+<td align="left">183.18</td>
+</tr>
+<tr class="even">
+<td align="right">12</td>
+<td align="left">浙江</td>
+<td align="left">3842.59</td>
+<td align="left">471.55</td>
+<td align="left"></td>
+<td align="left">7.54</td>
+<td align="left">290.87</td>
+<td align="left">751.42</td>
+<td align="left">143.90</td>
+<td align="left">85.09</td>
+<td align="left">291.82</td>
+<td align="left">278.98</td>
+<td align="left">78.11</td>
+<td align="left">338.43</td>
+<td align="left">373.32</td>
+<td align="left">273.99</td>
+<td align="left">137.81</td>
+<td align="left">96.97</td>
+<td align="left">5.78</td>
+<td align="left">2.80</td>
+<td align="left">30.43</td>
+<td align="left">58.05</td>
+<td align="left">13.11</td>
+<td align="left">3.20</td>
+<td align="left">109.42</td>
+</tr>
+<tr class="odd">
+<td align="right">13</td>
+<td align="left">安徽</td>
+<td align="left">3302.99</td>
+<td align="left">345.34</td>
+<td align="left"></td>
+<td align="left">5.57</td>
+<td align="left">128.58</td>
+<td align="left">564.71</td>
+<td align="left">77.03</td>
+<td align="left">62.35</td>
+<td align="left">392.98</td>
+<td align="left">277.23</td>
+<td align="left">81.96</td>
+<td align="left">280.76</td>
+<td align="left">351.87</td>
+<td align="left">219.59</td>
+<td align="left">125.40</td>
+<td align="left">65.63</td>
+<td align="left">8.06</td>
+<td align="left"></td>
+<td align="left">40.87</td>
+<td align="left">161.22</td>
+<td align="left">31.21</td>
+<td align="left">11.90</td>
+<td align="left">70.76</td>
+</tr>
+<tr class="even">
+<td align="right">14</td>
+<td align="left">福建</td>
+<td align="left">2198.18</td>
+<td align="left">247.47</td>
+<td align="left"></td>
+<td align="left">4.76</td>
+<td align="left">144.74</td>
+<td align="left">406.73</td>
+<td align="left">40.48</td>
+<td align="left">35.86</td>
+<td align="left">184.92</td>
+<td align="left">159.30</td>
+<td align="left">37.95</td>
+<td align="left">146.24</td>
+<td align="left">207.89</td>
+<td align="left">240.05</td>
+<td align="left">95.71</td>
+<td align="left">49.63</td>
+<td align="left">1.58</td>
+<td align="left"></td>
+<td align="left">25.25</td>
+<td align="left">56.45</td>
+<td align="left">13.78</td>
+<td align="left">2.98</td>
+<td align="left">96.41</td>
+</tr>
+<tr class="odd">
+<td align="right">15</td>
+<td align="left">江西</td>
+<td align="left">2534.60</td>
+<td align="left">258.00</td>
+<td align="left"></td>
+<td align="left">5.03</td>
+<td align="left">123.90</td>
+<td align="left">474.43</td>
+<td align="left">21.32</td>
+<td align="left">39.66</td>
+<td align="left">272.75</td>
+<td align="left">196.32</td>
+<td align="left">43.76</td>
+<td align="left">125.34</td>
+<td align="left">287.99</td>
+<td align="left">218.05</td>
+<td align="left">157.36</td>
+<td align="left">38.16</td>
+<td align="left">2.06</td>
+<td align="left"></td>
+<td align="left">28.51</td>
+<td align="left">108.28</td>
+<td align="left">47.11</td>
+<td align="left">12.51</td>
+<td align="left">74.07</td>
+</tr>
+<tr class="even">
+<td align="right">16</td>
+<td align="left">山东</td>
+<td align="left">5002.07</td>
+<td align="left">618.48</td>
+<td align="left"></td>
+<td align="left">15.13</td>
+<td align="left">274.69</td>
+<td align="left">1047.90</td>
+<td align="left">108.62</td>
+<td align="left">91.57</td>
+<td align="left">501.54</td>
+<td align="left">360.36</td>
+<td align="left">113.95</td>
+<td align="left">401.70</td>
+<td align="left">564.00</td>
+<td align="left">294.91</td>
+<td align="left">184.41</td>
+<td align="left">119.34</td>
+<td align="left">21.17</td>
+<td align="left">0.52</td>
+<td align="left">68.15</td>
+<td align="left">67.56</td>
+<td align="left">35.78</td>
+<td align="left">32.13</td>
+<td align="left">80.18</td>
+</tr>
+<tr class="odd">
+<td align="right">17</td>
+<td align="left">河南</td>
+<td align="left">4248.82</td>
+<td align="left">559.02</td>
+<td align="left"></td>
+<td align="left">5.67</td>
+<td align="left">204.80</td>
+<td align="left">857.14</td>
+<td align="left">56.59</td>
+<td align="left">57.54</td>
+<td align="left">547.96</td>
+<td align="left">361.48</td>
+<td align="left">95.60</td>
+<td align="left">191.30</td>
+<td align="left">480.48</td>
+<td align="left">281.21</td>
+<td align="left">126.55</td>
+<td align="left">67.60</td>
+<td align="left">16.83</td>
+<td align="left">3.42</td>
+<td align="left">63.54</td>
+<td align="left">142.64</td>
+<td align="left">39.85</td>
+<td align="left">26.41</td>
+<td align="left">63.17</td>
+</tr>
+<tr class="even">
+<td align="right">18</td>
+<td align="left">湖北</td>
+<td align="left">3214.74</td>
+<td align="left">394.95</td>
+<td align="left"></td>
+<td align="left">2.51</td>
+<td align="left">188.40</td>
+<td align="left">488.16</td>
+<td align="left">44.19</td>
+<td align="left">47.09</td>
+<td align="left">449.29</td>
+<td align="left">247.30</td>
+<td align="left">101.11</td>
+<td align="left">161.33</td>
+<td align="left">376.23</td>
+<td align="left">255.18</td>
+<td align="left">112.46</td>
+<td align="left">52.52</td>
+<td align="left">7.28</td>
+<td align="left">1.21</td>
+<td align="left">45.39</td>
+<td align="left">103.06</td>
+<td align="left">35.34</td>
+<td align="left">12.68</td>
+<td align="left">89.05</td>
+</tr>
+<tr class="odd">
+<td align="right">19</td>
+<td align="left">湖南</td>
+<td align="left">3520.76</td>
+<td align="left">466.74</td>
+<td align="left">0.01</td>
+<td align="left">9.56</td>
+<td align="left">174.42</td>
+<td align="left">540.83</td>
+<td align="left">41.96</td>
+<td align="left">44.87</td>
+<td align="left">484.44</td>
+<td align="left">256.76</td>
+<td align="left">85.26</td>
+<td align="left">276.00</td>
+<td align="left">394.26</td>
+<td align="left">301.31</td>
+<td align="left">119.88</td>
+<td align="left">53.46</td>
+<td align="left">3.87</td>
+<td align="left"></td>
+<td align="left">49.88</td>
+<td align="left">126.76</td>
+<td align="left">29.70</td>
+<td align="left">13.47</td>
+<td align="left">47.31</td>
+</tr>
+<tr class="even">
+<td align="right">20</td>
+<td align="left">广东</td>
+<td align="left">6712.40</td>
+<td align="left">807.41</td>
+<td align="left">0.04</td>
+<td align="left">13.04</td>
+<td align="left">569.85</td>
+<td align="left">1227.87</td>
+<td align="left">203.92</td>
+<td align="left">170.56</td>
+<td align="left">548.65</td>
+<td align="left">433.75</td>
+<td align="left">232.62</td>
+<td align="left">518.16</td>
+<td align="left">420.34</td>
+<td align="left">533.40</td>
+<td align="left">147.12</td>
+<td align="left">91.88</td>
+<td align="left">14.61</td>
+<td align="left">18.61</td>
+<td align="left">53.77</td>
+<td align="left">146.42</td>
+<td align="left">25.72</td>
+<td align="left">152.31</td>
+<td align="left">382.36</td>
+</tr>
+<tr class="odd">
+<td align="right">21</td>
+<td align="left">广西</td>
+<td align="left">2545.28</td>
+<td align="left">322.18</td>
+<td align="left"></td>
+<td align="left">8.21</td>
+<td align="left">139.44</td>
+<td align="left">456.89</td>
+<td align="left">28.25</td>
+<td align="left">37.48</td>
+<td align="left">250.64</td>
+<td align="left">232.88</td>
+<td align="left">53.90</td>
+<td align="left">118.73</td>
+<td align="left">314.86</td>
+<td align="left">248.98</td>
+<td align="left">88.81</td>
+<td align="left">23.69</td>
+<td align="left">8.04</td>
+<td align="left"></td>
+<td align="left">39.49</td>
+<td align="left">106.85</td>
+<td align="left">13.66</td>
+<td align="left">12.75</td>
+<td align="left">39.56</td>
+</tr>
+<tr class="even">
+<td align="right">22</td>
+<td align="left">海南</td>
+<td align="left">778.80</td>
+<td align="left">82.02</td>
+<td align="left">0.96</td>
+<td align="left">4.46</td>
+<td align="left">53.23</td>
+<td align="left">127.27</td>
+<td align="left">9.83</td>
+<td align="left">16.60</td>
+<td align="left">94.04</td>
+<td align="left">50.30</td>
+<td align="left">23.97</td>
+<td align="left">39.57</td>
+<td align="left">105.63</td>
+<td align="left">53.19</td>
+<td align="left">21.44</td>
+<td align="left">10.66</td>
+<td align="left">0.25</td>
+<td align="left"></td>
+<td align="left">11.29</td>
+<td align="left">34.52</td>
+<td align="left">1.95</td>
+<td align="left">3.88</td>
+<td align="left">33.74</td>
+</tr>
+<tr class="odd">
+<td align="right">23</td>
+<td align="left">重庆</td>
+<td align="left">2570.24</td>
+<td align="left">224.58</td>
+<td align="left"></td>
+<td align="left">8.88</td>
+<td align="left">124.93</td>
+<td align="left">318.70</td>
+<td align="left">25.04</td>
+<td align="left">31.16</td>
+<td align="left">338.76</td>
+<td align="left">143.70</td>
+<td align="left">100.81</td>
+<td align="left">394.46</td>
+<td align="left">198.91</td>
+<td align="left">186.23</td>
+<td align="left">187.81</td>
+<td align="left">40.22</td>
+<td align="left">12.63</td>
+<td align="left">0.01</td>
+<td align="left">44.02</td>
+<td align="left">157.47</td>
+<td align="left">15.61</td>
+<td align="left">2.58</td>
+<td align="left">13.73</td>
+</tr>
+<tr class="even">
+<td align="right">24</td>
+<td align="left">四川</td>
+<td align="left">4674.92</td>
+<td align="left">485.11</td>
+<td align="left"></td>
+<td align="left">10.72</td>
+<td align="left">246.07</td>
+<td align="left">684.66</td>
+<td align="left">45.75</td>
+<td align="left">87.35</td>
+<td align="left">645.79</td>
+<td align="left">372.96</td>
+<td align="left">115.80</td>
+<td align="left">268.56</td>
+<td align="left">545.70</td>
+<td align="left">364.89</td>
+<td align="left">157.77</td>
+<td align="left">63.25</td>
+<td align="left">11.19</td>
+<td align="left">132.49</td>
+<td align="left">57.28</td>
+<td align="left">231.26</td>
+<td align="left">38.06</td>
+<td align="left">23.86</td>
+<td align="left">86.39</td>
+</tr>
+<tr class="odd">
+<td align="right">25</td>
+<td align="left">贵州</td>
+<td align="left">2249.40</td>
+<td align="left">307.21</td>
+<td align="left"></td>
+<td align="left">4.15</td>
+<td align="left">117.31</td>
+<td align="left">376.86</td>
+<td align="left">21.68</td>
+<td align="left">35.31</td>
+<td align="left">194.78</td>
+<td align="left">173.26</td>
+<td align="left">55.45</td>
+<td align="left">65.52</td>
+<td align="left">278.47</td>
+<td align="left">305.16</td>
+<td align="left">55.18</td>
+<td align="left">19.81</td>
+<td align="left">0.44</td>
+<td align="left"></td>
+<td align="left">32.72</td>
+<td align="left">121.65</td>
+<td align="left">8.31</td>
+<td align="left">13.35</td>
+<td align="left">62.77</td>
+</tr>
+<tr class="even">
+<td align="right">26</td>
+<td align="left">云南</td>
+<td align="left">2929.60</td>
+<td align="left">282.05</td>
+<td align="left">0.23</td>
+<td align="left">6.32</td>
+<td align="left">165.32</td>
+<td align="left">483.00</td>
+<td align="left">28.30</td>
+<td align="left">45.34</td>
+<td align="left">386.50</td>
+<td align="left">236.98</td>
+<td align="left">95.86</td>
+<td align="left">122.96</td>
+<td align="left">409.80</td>
+<td align="left">276.19</td>
+<td align="left">50.40</td>
+<td align="left">33.72</td>
+<td align="left">7.51</td>
+<td align="left">0.01</td>
+<td align="left">41.60</td>
+<td align="left">151.71</td>
+<td align="left">8.20</td>
+<td align="left">53.37</td>
+<td align="left">44.23</td>
+</tr>
+<tr class="odd">
+<td align="right">27</td>
+<td align="left">西藏</td>
+<td align="left">758.11</td>
+<td align="left">95.94</td>
+<td align="left">1.10</td>
+<td align="left">1.14</td>
+<td align="left">51.76</td>
+<td align="left">77.81</td>
+<td align="left">3.38</td>
+<td align="left">18.91</td>
+<td align="left">57.68</td>
+<td align="left">35.30</td>
+<td align="left">16.05</td>
+<td align="left">21.66</td>
+<td align="left">126.53</td>
+<td align="left">77.88</td>
+<td align="left">49.60</td>
+<td align="left">5.52</td>
+<td align="left">0.37</td>
+<td align="left">0.08</td>
+<td align="left">6.21</td>
+<td align="left">60.79</td>
+<td align="left">1.74</td>
+<td align="left"></td>
+<td align="left">48.68</td>
+</tr>
+<tr class="even">
+<td align="right">28</td>
+<td align="left">陕西</td>
+<td align="left">2930.81</td>
+<td align="left">341.32</td>
+<td align="left"></td>
+<td align="left">3.36</td>
+<td align="left">128.06</td>
+<td align="left">529.46</td>
+<td align="left">29.01</td>
+<td align="left">61.27</td>
+<td align="left">365.43</td>
+<td align="left">197.61</td>
+<td align="left">96.13</td>
+<td align="left">147.13</td>
+<td align="left">333.79</td>
+<td align="left">313.42</td>
+<td align="left">76.27</td>
+<td align="left">41.59</td>
+<td align="left">5.07</td>
+<td align="left">2.90</td>
+<td align="left">44.67</td>
+<td align="left">150.28</td>
+<td align="left">18.97</td>
+<td align="left">10.57</td>
+<td align="left">34.51</td>
+</tr>
+<tr class="odd">
+<td align="right">29</td>
+<td align="left">甘肃</td>
+<td align="left">1791.24</td>
+<td align="left">174.92</td>
+<td align="left"></td>
+<td align="left">1.85</td>
+<td align="left">80.31</td>
+<td align="left">284.33</td>
+<td align="left">13.22</td>
+<td align="left">33.07</td>
+<td align="left">279.22</td>
+<td align="left">143.18</td>
+<td align="left">84.99</td>
+<td align="left">65.88</td>
+<td align="left">237.66</td>
+<td align="left">158.91</td>
+<td align="left">29.31</td>
+<td align="left">16.95</td>
+<td align="left">2.47</td>
+<td align="left">8.77</td>
+<td align="left">41.06</td>
+<td align="left">92.58</td>
+<td align="left">9.24</td>
+<td align="left">8.83</td>
+<td align="left">24.49</td>
+</tr>
+<tr class="even">
+<td align="right">30</td>
+<td align="left">青海</td>
+<td align="left">967.47</td>
+<td align="left">65.40</td>
+<td align="left"></td>
+<td align="left">0.67</td>
+<td align="left">35.10</td>
+<td align="left">130.11</td>
+<td align="left">3.76</td>
+<td align="left">14.32</td>
+<td align="left">163.57</td>
+<td align="left">47.44</td>
+<td align="left">41.76</td>
+<td align="left">27.98</td>
+<td align="left">104.74</td>
+<td align="left">148.58</td>
+<td align="left">25.37</td>
+<td align="left">10.91</td>
+<td align="left">6.98</td>
+<td align="left">0.09</td>
+<td align="left">16.12</td>
+<td align="left">106.15</td>
+<td align="left">4.75</td>
+<td align="left">8.19</td>
+<td align="left">5.49</td>
+</tr>
+<tr class="odd">
+<td align="right">31</td>
+<td align="left">宁夏</td>
+<td align="left">705.91</td>
+<td align="left">51.96</td>
+<td align="left"></td>
+<td align="left">0.85</td>
+<td align="left">35.12</td>
+<td align="left">103.02</td>
+<td align="left">7.87</td>
+<td align="left">13.94</td>
+<td align="left">71.95</td>
+<td align="left">41.09</td>
+<td align="left">35.23</td>
+<td align="left">81.51</td>
+<td align="left">112.19</td>
+<td align="left">41.54</td>
+<td align="left">20.54</td>
+<td align="left">16.18</td>
+<td align="left">6.95</td>
+<td align="left"></td>
+<td align="left">7.11</td>
+<td align="left">33.86</td>
+<td align="left">2.72</td>
+<td align="left">7.17</td>
+<td align="left">15.13</td>
+</tr>
+<tr class="even">
+<td align="right">32</td>
+<td align="left">新疆</td>
+<td align="left">2284.49</td>
+<td align="left">245.36</td>
+<td align="left">0.26</td>
+<td align="left">3.77</td>
+<td align="left">146.28</td>
+<td align="left">399.80</td>
+<td align="left">26.43</td>
+<td align="left">47.70</td>
+<td align="left">201.64</td>
+<td align="left">132.43</td>
+<td align="left">53.67</td>
+<td align="left">140.10</td>
+<td align="left">297.59</td>
+<td align="left">206.83</td>
+<td align="left">47.60</td>
+<td align="left">25.24</td>
+<td align="left">9.00</td>
+<td align="left">0.85</td>
+<td align="left">35.06</td>
+<td align="left">170.04</td>
+<td align="left">17.91</td>
+<td align="left">9.23</td>
+<td align="left">67.70</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "teaching-01-scrape-html-new-table_files/mathjax-local/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,590 @@
+---
+title: "教学工作"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    css: css/style.css
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+    mathjax: local
+    self_contained: no
+  bookdown::word_document2: 
+    fig_caption:  true
+    toc: no
+    toc_depth: 1
+    reference_docx: test-ref.docx
+  html_document:
+    theme: united
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: header.tex
+      before_body: preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+---
+
+```{r global_options, echo=F,message=FALSE,warning=F}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE,
+                      fig.align='center',fig.width=10, fig.height=7) # Places figures on their own pages
+options(
+  htmltools.dir.version = FALSE, 
+  formatR.indent = 2, width = 55, 
+  digits = 2,scipen=999,tinytex.verbose = TRUE,
+  knitr.kable.NA = '',
+  fig.width=12, fig.height=8)
+library('bookdown')
+library('knitr')
+library('xlsx')
+library("openxlsx")
+#install.packages('tidyr')
+#install.packages('plyr')
+library('tidyr')
+library('dplyr')
+library('stringr')
+library('tidyverse')
+library('ggplot2')
+library("scales")
+#install.packages("gridExtra")
+library("gridExtra")
+#install.packages("magrittr")
+library("magrittr")
+#install.packages("ggthemes")
+#install.packages("ggrepel")
+require("ggthemes")
+require("ggrepel")
+require("lubridate")
+require("here")
+```
+
+
+
+
+## 3.3 全新提取方法
+
+### 异常提示
+
+0. html形式问题
+
+- 2004年及以前 一张html 4个表格部分
+
+
+1. 统计口径问题：
+
+- 2002年及以前，[科技三项、科学事业费]、[支援农村、农业综合、农林水利气象]、教育事业费
+
+- 2006年及以前：[科技三项、科学事业费]、[农业支出、林业支出、农林水利气象]、教育事业费
+
+- 2007年及以后："教育","科学技术","农林水"
+
+
+2. 标题行异常：
+
+- 2018年 标题有两行
+
+- 2014年及以后，标题开始不同，比如多出"支出"
+
+- 2006年及以前，两行标题，用第一行
+
+3. 数据单位问题：
+
+- 2008年及之前，单位为"万元"。而2009年及以后，单位是"亿元"。
+
+
+### 抓取原始数据
+
+#### 抓取思路
+
+- 按`年份`手动抓取。需要人工介入。
+
+- 数据表对齐方式。html源码文件中(chrome - 检查- sources -) 可能存在"左对齐"和"右对齐"两种办法。
+
+- 表格显示不整齐：现象、原因及解决办法。
+
+    - 现象：无法对齐（chrome直接看html 表格）。基本对齐（chrome查看源代码，chrome - 检查- sources -）。尤其是碰到缺失值（且无特定缺失值标记符，如-），进一步加剧显示的混乱性。
+    - 原因：html编码时，table/tbody/tr/td， 采用了&nbsp 空格符。其unic编码显示为`\u00A0`。
+    - 办法：a.识别左对齐还是右对齐(check)，b.然后定位位置(str_locate_all),c.处理缺失值问题，并进行全列匹配(left_join)。
+
+#### 异常提示
+
+
+html形式问题：
+
+- 2004年及以前 一张html 4个表格部分
+
+标题行异常：
+
+- 2004年及以前，2006年：双行标题
+
+- 2005年，单行标题
+
+- 2018年，共3个html页面，第一个页面双行标题，其他则为单行标题
+
+
+排列缩进异常：
+
+- 2006、2007、2009年:"地方合计"排序需要单独减少一个"\u00A0"
+
+
+网页重大错误：
+
+- 2008年，"工业商业金融等事务地震灾后重建支出" 两列数据没有分开。暂时未处理！
+
+
+
+#### 抓取代码
+
+```{r}
+# load pkgs
+library("xml2")
+require("rvest")
+require("stringr")
+require("tidyverse")
+require("tidyselect")
+require("openxlsx")
+
+#--------------------------
+# this chunk should run only once
+#--------------------------
+
+# files html path
+files_dir <- here::here("data", "public-budget","html")
+files_html <- list.files(str_c(files_dir,"/"))
+page_url <- str_c(files_dir, files_html, sep = "/")
+
+
+# load the basic function
+### some times you need change the code
+source(here("Rfun","extract-from-html.R"))
+
+
+# specify the year
+year<- 2000
+
+for (year in c(2000:2018)) {
+
+  indx<- str_detect(page_url,paste0(year))
+  page<- page_url[indx]
+  i_len <- length(page)
+  
+  
+  tbl_out <-NULL
+  vars_index <- NULL
+  #--------------------------
+  #i<-1
+  
+  # loop htmls
+  for (i in 1:i_len) {
+    # obtain raw table
+    path_tbl<-"/html/body/table[2]/tbody/tr[2]/td/table/tbody/tr/td[2]/table"
+    
+    # the html source file declares gb2312
+    tbl_raw <- read_html(page[i],encoding = "utf-8") %>%
+      html_nodes(xpath =  path_tbl) %>%
+      html_table(., fill=T, trim=T) %>%
+      .[[1]]  
+     
+    # detect the start and end row
+    first_end <- which(str_detect(tbl_raw$X1,"地方合计|新疆"))
+    n_part <- length(first_end)/2
+    
+    # j <-1
+    # loop parts
+    for (j in 1: n_part){
+      # select which part 
+      spc_part <- j
+     
+      if(spc_part > n_part){
+        print(paste0("Error: specification of ",spc_part, "is larger than ", n_part))
+      } else {
+        range <- (first_end[(2*spc_part -1)]):first_end[2*spc_part] #  如有"全国"，则起始要减去1
+      }
+      
+      # handle the extra rows
+      pro_extra <- c("地方合计","内蒙古","黑龙江")
+      
+      if (year %in% c(2006,2007,2009)){
+        pro_standard <- c("地方合计\u00A0","内蒙古\u00A0","黑龙江\u00A0")
+      } else {
+        pro_standard <- c("地方合计\u00A0\u00A0","内蒙古\u00A0","黑龙江\u00A0")
+      }
+      
+      # get the tidy alignment tbl
+      tbl_html <- tbl_raw %>%
+        .[range,] %>%
+        as_tibble() %>%
+        mutate(value= str_trim(value, "both")) %>%
+        mutate(value=paste0(value, "\u00A0")) %>%
+        mutate(value= mgsub::mgsub(value, pro_extra, pro_standard)) %>%
+        # be careful to the return value' class of function str_locate_all()
+        mutate(location=str_locate_all(value, "(?<=\u00A0)(\\d.+?)(?=\u00A0)"),
+               start=(map(location, function(x){x[,1]})),
+               end=(map(location, function(x){x[,2]}))) %>%
+        mutate(begin=map(start, function(x){x[[1]]}),
+               tail=map(end, function(x){x[[1]]})) %>%
+        mutate(begin=unlist(begin),
+               tail=unlist(tail),
+               mod_begin=unlist(getModes(begin)),
+               mod_tail=unlist(getModes(tail)),
+               diff_begin = mod_begin-begin,
+               diff_tail = mod_tail-tail,
+               check_begin = (begin==mod_begin),
+               check_tail = (tail==mod_tail)) 
+      
+      # get the data.frame
+      tbl_pair <- tbl_html %>%
+        mutate(num =str_extract_all(value, "(?<=\u00A0)(\\d.+?)(?=\u00A0)")) %>% 
+        mutate(pair=pmap(list(start, end, num), 
+                         .f = function(x,y,z){value <- tibble(start=x, end=y, num=z)})) %>%
+        mutate(pair=map(pair, 
+                        function(dt){calc<- dt %>% mutate(n=end-start +1)})) %>%
+        mutate(len=map(pair, function(dt){dim(dt)[1]})) 
+      
+      # get the standard mod
+      tbl_mod <- tbl_pair %>%
+        filter(len==max(unlist(.$len))) %>%
+        .[1,] %>%
+        select(pair) %>%
+        unnest(pair) %>%
+        mutate(cols=paste0("V",str_pad(1:nrow(.), width = 2,pad = "0", side = "left"))) %>%
+        select(start,end, cols)
+          
+      
+      # match the standard rows
+      if (all(tbl_pair$check_begin)){
+        tbl_match <- tbl_pair %>%
+          select(value,pair)%>%
+          mutate(pair=map(pair, function(dt){ 
+            out<- tbl_mod %>% 
+            select(-end) %>% left_join(., dt, by="start") %>%
+            select(start, everything(.))}
+            ))
+      } else if (all(tbl_pair$check_tail)) {
+        tbl_match <- tbl_pair %>%
+          select(value,pair)%>%
+          mutate(pair=map(pair, function(dt){ 
+            out<- tbl_mod %>% 
+            select(-start) %>% left_join(., dt, by="end") %>%
+            select( end, everything(.))}
+            ))
+      }
+      
+      # prepare for detect provinces
+      levels_province<-c('地方合计','北京','天津','河北','山西','内蒙古','辽宁','吉林','黑龙江','上海','江苏','浙江','安徽','福建','江西','山东','河南','湖北','湖南','广东','广西','海南','重庆','四川','贵州','云南','西藏','陕西','甘肃','青海','宁夏','新疆')
+      pattern_pro <- paste0(levels_province,collapse = "|")
+      
+      # get the normal data table
+      tbl_rows <- tbl_match %>% 
+        add_column(row=1:nrow(.)) %>%
+        mutate(province= str_extract(value, pattern_pro)) %>%
+        select(-value) %>%
+        unnest(pair) %>%
+        select(row, province, num, cols) %>%
+        spread(key=cols ,value = num)
+      
+      # get the header from raw html
+      ### the pattern
+      head_index <- which(unlist(str_detect(tbl_raw$X1, "地方合计")))-1
+      
+      ### be careful the extra case: one line header or two lines header ?
+      if (year %in% c(2000:2004,2006) ) {
+        head_index <- head_index[j] -1
+      } else {
+        head_index <- head_index[j]
+      }
+      
+      ### get the chn names
+      vars_index <-  tbl_raw %>%
+        .[head_index,] %>%
+        gsub("(\u00A0){1,20}", "&", .) %>%
+        str_split(., pattern = "&") %>%
+        unlist() %>%
+        c("序号", .)
+      
+      ### handel the extra case
+      if (year %in% c(2018) & i==1) {
+        vars_index <- c("序号", "地区", "地方一般公共预算支出", vars_index[-1])
+      } else {
+        vars_index <- vars_index
+      }
+      
+      ### trim the extra col (the first two cols),
+      ### if more than one page in one year, or more than one part in one page.
+      if (i>1 | spc_part > 1) {
+        vars_index <- vars_index[c(-1,-2)]
+        tbl_rows <- tbl_rows %>%
+          select(all_of(names(.)[c(-1,-2)]))
+      } else {
+        vars_index <- vars_index
+        tbl_rows <- tbl_rows
+      }
+      
+      # rename header
+      tbl_chn <- tbl_rows %>%
+        rename_at(all_of(names(.)), ~all_of(vars_index))
+      
+      # cols bind
+      tbl_out <- bind_cols(tbl_out, tbl_chn)
+      
+      # show process information
+      print(paste0("the ",i,"th file for the year of ",year, ", part:", spc_part))  
+    }
+    
+  }
+  
+  # add year and type convert
+  tbl_year <- tbl_out %>%
+    add_column(`年份`=year, .before = "序号")
+  
+  # files path
+  csv_dir <- here::here("data-raw","nation-yearbook", "part07-finance", "public-budget","csv-new")
+  csv_files <- str_c(csv_dir, 
+                     paste0(year,".xlsx"), sep = "/")
+  
+  # write out the csv files
+  #write.csv(tbl_year, csv_files, row.names = F)
+  write.xlsx(tbl_year, csv_files)
+
+}
+
+```
+
+
+
+### 导出提取数据
+
+#### 抓取思路
+
+提取的主要困难和解决思路：
+
+- 主要困难：
+
+    - 统计口径不一致。列变量名称不同。
+    - 需要计算得到新变量。
+    - 每年数据表，需要保持列排序的一致性。
+
+- 解决思路：
+
+    - 探测变量名`str_detect()`。需要手工设置探测规则（注意需要加总的子变量的命名技巧）。不要使用变量全名（因为每年的标题行会不一样，名称变异过多）。
+    - 只选择需要的列`select()`。可以减少数据量。
+    - 变形为long数据`gather()`。方便后面批量编码和加总计算。
+    - 识别并替换变量名为统一英文名`mgsub()`。
+    - 单独计算需要汇总计算的型变量`seperate()`/`group_by()`/`summarise()`
+    - 合并计算汇总后的表格`bind_row()`
+    - 变形为wide数据`spread()`，并排序列。
+
+#### 异常提示
+
+统计口径问题：
+
+- 列变量全部调整为："年份", "序号", "省份","合计", "教育","科学技术","农林水"
+
+- 2002年及以前，[科技三项、科学事业费]、[支援农村、农业综合、农林水利气象]、教育事业费
+
+- 2006年及以前：[科技三项、科学事业费]、[农业支出、林业支出、农林水利气象]、教育事业费
+
+    - 2003年： 科技三项、[农业、林业、农林水利气象]、教育事业费
+
+- 2007年及以后："教育","科学技术","农林水"
+
+
+#### 提取代码
+
+```{r}
+
+# files path
+csv_dir <- here::here("data-raw","nation-yearbook", "part07-finance", "public-budget","csv-new")
+
+# filter the xlsx files
+list_files <- list.files(csv_dir) %>%
+  .[which(str_detect(.,"xlsx"))]
+
+url_files <- str_c(csv_dir, 
+                   list_files, sep = "/")
+
+year_choice <- as.numeric(str_extract(list_files, "(\\d{4})"))
+
+
+#i <-6
+for (i in 1:length(list_files)) {
+  
+  # read files
+  tbl_file <- read.xlsx(url_files[i],colNames = T) 
+  
+  # specify the header   [科技三项、科学事业费]、
+  if (year_choice[i] %in% c(2000:2002)){
+   vars_detect <- c("教育事业费","科技三项","科学事业费","支援农村", "农业综合","农林水利气象")
+   vars_eng <- c("edu", "tech_1","tech_2", "agri_1", "agri_2", "agri_3")
+  } else if (year_choice[i] %in% c(2003:2006)){
+   vars_detect <- c("教育事业费","科技三项","科学事业费","农业", "林业","农林水利气象")
+   vars_eng <- c("edu", "tech_1","tech_2", "agri_1", "agri_2", "agri_3")
+  } else {
+   vars_detect <- c("教育", "科学技术", "农林水")
+   vars_eng <- c("edu", "tech", "agri")
+  }
+   
+   # eng variables
+   eng_hold <- c("year", "index", "province","total")
+   vars_all <- c("total","edu", "tech","agri")
+   
+   pattern_detect <- paste0("(", vars_detect,".*)")
+  
+   # gather the selected cols
+   tbl_gather <- tbl_file %>%
+     select(names(.)[1:4],starts_with(vars_detect)) %>%
+     rename_at(names(.)[1:4], ~all_of(eng_hold)) %>%
+     gather(key="variables", value="value", 
+            all_of(names(.)[-c(1:3)]) ) %>%
+     mutate(value=as.numeric(value)) %>%        # type convert
+     mutate(variables=mgsub::mgsub(variables, pattern_detect, vars_eng, perl=T)) 
+   
+   # calulate the additions
+   tbl_add <- tbl_gather %>%
+     filter((str_detect(variables, "_"))) %>%
+     separate(col = "variables", into = c("variables", "child"), sep="_") %>%
+     group_by(year, index, province, variables) %>%
+     summarise(value=sum(value), .groups="drop") 
+   
+   # row bind two tbls
+   tbl_rbind <- tbl_gather %>%
+     #filter(!(str_detect(variables, "add"))) %>%
+     bind_rows(.,tbl_add)
+   
+   # check info
+   check_na <- tbl_rbind %>%
+     filter(is.na(value)) %>%
+     summarise(n_na=n())
+   
+   # get the wide table, and sort columns
+   tbl_wide <- tbl_rbind %>%
+     spread(key="variables", value="value") %>%
+     select(all_of(c(eng_hold, vars_all)), everything())
+     
+  # write out
+   xlsx_path <- paste0("xlsx-01-extract/new-", year_choice[i],".xlsx")
+   openxlsx::write.xlsx(tbl_wide, xlsx_path)
+  
+  # show process and check information 
+  print(paste0("proces info: the ",i,"th file for the year of ",
+               year_choice[i], ", files:", list_files[i]))   
+  print(paste0("check info: vars including- ",
+                paste0(unique(tbl_rbind$variables), collapse = "/"),
+                ". na:", check_na$n_na))
+}
+
+
+```
+
+### 导出加工数据
+
+
+数据单位问题：
+
+- 2008年及之前，单位为"万元"。而2009年及以后，单位是"亿元"。
+
+单位全部调整为："亿元"
+
+
+
+```{r}
+
+# files path
+csv_dir <- here::here("data-raw","nation-yearbook", "part07-finance", "public-budget","xlsx-01-extract")
+
+
+list_files <- list.files(csv_dir) %>%
+  .[which(str_detect(.,"new"))]
+
+url_files <- str_c(csv_dir, 
+                   list_files, sep = "/")
+
+year_choice <- as.numeric(str_extract(list_files, "(\\d{4})"))
+
+names_eng <- c("year", "index","province", "total", "edu", "tech", "agri")
+vars_all <- c("total","edu", "tech","agri")
+
+
+#i <-1
+
+#length(list_files)
+
+for (i in 1:length(list_files)) {
+  
+  dt_raw <- read.xlsx(url_files[i], colNames = T) %>%
+    select(all_of(names_eng))
+
+  if (year_choice[i]< 2009) {
+    dt_sel <- dt_raw %>%
+      mutate_at(all_of(vars_all), .funs = function(x){x/10000})
+  } else {
+    dt_sel <- dt_raw
+  }
+  
+  
+  xlsx_path <- paste0("xlsx-02-proc/new-", year_choice[i],".xlsx")
+  openxlsx::write.xlsx(dt_sel, xlsx_path)
+  
+  # show process and check information 
+  print(paste0("proces info: the ",i,"th file for the year of ",
+               year_choice[i], ", files:", list_files[i]))   
+  
+}
+
+
+```
+
+
+### 导出分析数据
+
+核查数据：
+
+科技支出：发现存在数值不正常“跳跃”。
+
+- 2006年及以前有两个构成，"科技三项"和"科学事业费"
+
+  - 若不合并此两项：2007年"地方合计"858.4403；2006年"地方合计"360.8616；
+  - 若合并此两项：2006年"地方合计"两项加总：`r (3608616+1674690)/10000`
+
+```{r}
+# files path
+csv_dir <- here::here("data-raw","nation-yearbook", "part07-finance", "public-budget","xlsx-02-proc")
+
+
+list_files <- list.files(csv_dir) %>%
+  .[which(str_detect(.,"new"))]
+url_files <- str_c(csv_dir, 
+                   list_files, sep = "/")
+
+year_choice <- as.numeric(str_extract(list_files, "(\\d{4})"))
+
+dt_wide <- NULL
+for (i in 1: length(list_files)){
+  dt_proc <- read.xlsx(url_files[i])
+  dt_wide <- bind_rows(dt_wide, dt_proc)
+}
+
+year_up<- max(year_choice)
+
+out_path <- paste0("xlsx-03-analysis/wide-upto-", year_up, ".xlsx")
+
+write.xlsx(dt_wide, out_path)
+
+dt_wide <- dt_wide %>%
+  arrange(province, year)
+```

@@ -1,0 +1,173 @@
+---
+title: "word docx模板设计（文稿）"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output:
+  bookdown::word_document2: 
+    fig_caption:  true
+    toc: no
+    toc_depth: 1
+    reference_docx: template-post.docx
+  bookdown::html_document2:
+    css: css/style.css
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+    mathjax: local
+    self_contained: no
+  html_document:
+    theme: united
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: header.tex
+      before_body: preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+---
+
+```{r global_options, echo=F,message=FALSE,warning=F}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE,
+                      fig.align='center',fig.width=10, fig.height=7) # Places figures on their own pages
+options(
+  htmltools.dir.version = FALSE, 
+  formatR.indent = 2, width = 55, 
+  digits = 2,scipen=999,tinytex.verbose = TRUE,
+  knitr.kable.NA = '',
+  fig.width=12, fig.height=8)
+library('bookdown')
+library('knitr')
+library('xlsx')
+library("openxlsx")
+#install.packages('tidyr')
+#install.packages('plyr')
+library('tidyr')
+library('dplyr')
+library('stringr')
+library('tidyverse')
+library('ggplot2')
+library("scales")
+#install.packages("gridExtra")
+library("gridExtra")
+#install.packages("magrittr")
+library("magrittr")
+#install.packages("ggthemes")
+#install.packages("ggrepel")
+require("ggthemes")
+require("ggrepel")
+require("lubridate")
+require("here")
+```
+
+# 1.一级标题（段落）
+
+第一段：[first paragraph]
+
+第二段落：[正文文本]
+
+
+下面是一段[source code]引用，以及[脚注文本]脚注^[This is a footnote. poem from 莎士比亚。]：
+
+```
+This is quoted text。
+
+这是一段应用。——莎士比亚
+```
+
+还有行内公式[first paragraph或者正文文本]$E=MC^2$：
+
+
+以及独立公式[first paragraph或者正文文本]：
+
+$$\begin{align}
+\hat{\sigma} = \frac{\sum{e_i^2}}{n-1}
+\end{align}$$
+
+## 2.二级标题（列表）
+
+
+[first paragraph]以下是无序列表（两个层级）：
+
+- [正文]中国统计年鉴
+
+- [正文]数据网站：搜数网[人大权限](https://libproxy.ruc.edu.cn/ermsClient/eresourceInfo.do?rid=136)
+
+- [正文]搜数标题：
+
+    - [compact]2014-2018："中国2014年分地区一般公共预算支出统计(一)"
+    - [compact]2013: "分地区公共财政支出"
+    - [compact]2000-2002;2012: "分地区财政支出"
+    - [compact]2003-2011: "各地区财政支出"
+
+[first paragraph]以下是有序列表（两个个层级）：
+
+    
+1. [正文]可下载年限范围：2000-2019
+
+2. [正文]文件格式：html-形式表格
+
+    a. [compact]2013: "分地区公共财政支出"
+    b. [compact]2000-2002;2012: "分地区财政支出"
+    c. [compact]2003-2011: "各地区财政支出"
+
+### 3.三级标题（示例表格）
+
+
+示例表，请参看\@ref(tab:example-tab)。
+
+[Table caption]表题：
+
+[compact]单元格：
+
+
+```{r example-tab}
+#install.packages("datasets")
+require("datasets")
+iris %>%
+  head() %>%
+  kable(align = "c", caption = "example table")
+```
+
+
+#### 4.四级标题（示例图）
+
+示例图请参看\@ref(fig:example-fig)。
+
+[Image caption]图题：
+
+[captioned figure]图片：
+
+```{r example-fig, fig.cap= "example figure"}
+iris %>%
+  ggplot(aes(x = Sepal.Length	, y =Sepal.Width)) +
+  geom_point() 
+```
+
+
+
+
+##### 5.五级标题（代码域）
+
+
+[NormalTok]代码域：
+
+```{r, eval=FALSE, echo=TRUE,fig.cap= "example figure"}
+iris %>%
+  ggplot(aes(x = Sepal.Length	, y =Sepal.Width)) +
+  geom_point() 
+```
+
