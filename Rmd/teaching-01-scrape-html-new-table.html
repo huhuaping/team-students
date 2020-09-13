@@ -11,7 +11,7 @@
 
 <meta name="author" content="胡华平" />
 
-<meta name="date" content="2020-09-12" />
+<meta name="date" content="2020-09-13" />
 
 <title>html异常表格提取技术——各地区一般公共支出数据为例</title>
 
@@ -332,43 +332,61 @@ div.tocify {
 
 <h1 class="title toc-ignore">html异常表格提取技术——各地区一般公共支出数据为例</h1>
 <h4 class="author">胡华平</h4>
-<h4 class="date">2020-09-12</h4>
+<h4 class="date">2020-09-13</h4>
 
 </div>
 
 
+<div id="案例情况" class="section level1">
+<h1><span class="header-section-number">1</span> 案例情况</h1>
+<p>研究目标是把各地区一般公共支出统计表，正确识别并自动化清洗。</p>
+<ul>
+<li><p>中国统计年鉴</p></li>
+<li><p>数据网站：搜数网<a href="https://libproxy.ruc.edu.cn/ermsClient/eresourceInfo.do?rid=136">人大权限</a></p></li>
+<li><p>搜数标题：</p>
+<ul>
+<li>2014-2018：“中国2014年分地区一般公共预算支出统计(一)”</li>
+<li>2013: “分地区公共财政支出”</li>
+<li>2000-2002;2012: “分地区财政支出”</li>
+<li>2003-2011: “各地区财政支出”</li>
+</ul></li>
+<li><p>可下载年限范围：2000-2019</p></li>
+<li><p>文件格式：html-形式表格</p></li>
+</ul>
+</div>
 <div id="html异常表格的问题" class="section level1">
-<h1><span class="header-section-number">1</span> html异常表格的问题</h1>
+<h1><span class="header-section-number">2</span> html异常表格的问题</h1>
 <div id="原始html表格" class="section level2">
-<h2><span class="header-section-number">1.1</span> 原始html表格</h2>
+<h2><span class="header-section-number">2.1</span> 原始html表格</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">include_graphics</span>(<span class="st">&quot;../pic/public-budget/view-normal.png&quot;</span>)</span></code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-1"></span>
 <img src="../pic/public-budget/view-normal.png" alt="直接打开html发现表格列对不齐" width="402" />
 <p class="caption">
-Figure 1.1: 直接打开html发现表格列对不齐
+Figure 2.1: 直接打开html发现表格列对不齐
 </p>
 </div>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">include_graphics</span>(<span class="st">&quot;../pic/public-budget/view-source.png&quot;</span>)</span></code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-2"></span>
-<img src="../pic/public-budget/view-source.png" alt="通过firefox调试器查看是很整齐的数据表" width="648" />
+<img src="../pic/public-budget/view-source.png" alt="通过firefox或chrome调试器查看是很整齐的数据表" width="648" />
 <p class="caption">
-Figure 1.2: 通过firefox调试器查看是很整齐的数据表
+Figure 2.2: 通过firefox或chrome调试器查看是很整齐的数据表
 </p>
 </div>
+<p>全部原始html文件可以查看github<a href="https://github.com/huhuaping/team-students/tree/dev/data/public-budget/html">仓库</a></p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">include_graphics</span>(<span class="st">&quot;../pic/public-budget/files-list.png&quot;</span>)</span></code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-3"></span>
 <img src="../pic/public-budget/files-list.png" alt="有多个年度的html页面" width="731" />
 <p class="caption">
-Figure 1.3: 有多个年度的html页面
+Figure 2.3: 有多个年度的html页面
 </p>
 </div>
 </div>
 <div id="异常情况总结" class="section level2">
-<h2><span class="header-section-number">1.2</span> 异常情况总结</h2>
+<h2><span class="header-section-number">2.2</span> 异常情况总结</h2>
 <p>总结起来问题大概有三个：</p>
 <p><strong>html表格形式异常</strong>：</p>
 <ul>
-<li>2004年及以前 一张html有4个表格部分。</li>
+<li>2004年及以前一张html有4个表格部分。</li>
 </ul>
 <p><strong>标题行异常</strong>：</p>
 <ul>
@@ -378,11 +396,11 @@ Figure 1.3: 有多个年度的html页面
 </ul>
 <p><strong>排列缩进异常</strong>：</p>
 <ul>
-<li>2006、2007、2009年:“地方合计”排序需要单独减少一个"</li>
+<li>2006、2007、2009年：“地方合计”排序需要单独减少一个"</li>
 </ul>
 </div>
 <div id="需要达到的目标效果" class="section level2">
-<h2><span class="header-section-number">1.3</span> 需要达到的目标效果</h2>
+<h2><span class="header-section-number">2.3</span> 需要达到的目标效果</h2>
 <p>主要包括如下几个目标：</p>
 <ol style="list-style-type: lower-alpha">
 <li><p>获得排列整齐的表格(dataframe)</p></li>
@@ -392,9 +410,9 @@ Figure 1.3: 有多个年度的html页面
 </div>
 </div>
 <div id="目标1得到排列整齐的表格" class="section level1">
-<h1><span class="header-section-number">2</span> 目标1：得到排列整齐的表格</h1>
+<h1><span class="header-section-number">3</span> 目标1：得到排列整齐的表格</h1>
 <div id="html表格不整齐的问题诊断和处理思路" class="section level2">
-<h2><span class="header-section-number">2.1</span> html表格不整齐的问题诊断和处理思路</h2>
+<h2><span class="header-section-number">3.1</span> html表格不整齐的问题诊断和处理思路</h2>
 <p>经过仔细分析html源文件，可以发现表格背后的一些规律和特点：</p>
 <p><strong>A.表格显示不整齐现象</strong>：</p>
 <ul>
@@ -414,9 +432,9 @@ Figure 1.3: 有多个年度的html页面
 </ol>
 </div>
 <div id="自动化提取html表格的代码实现" class="section level2">
-<h2><span class="header-section-number">2.2</span> 自动化提取html表格的代码实现</h2>
+<h2><span class="header-section-number">3.2</span> 自动化提取html表格的代码实现</h2>
 <div id="工具包准备" class="section level3">
-<h3><span class="header-section-number">2.2.1</span> 工具包准备</h3>
+<h3><span class="header-section-number">3.2.1</span> 工具包准备</h3>
 <p>转载需要用到的各种R包。</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co"># load pkgs</span></span>
 <span id="cb4-2"><a href="#cb4-2"></a><span class="kw">library</span>(<span class="st">&quot;xml2&quot;</span>)</span>
@@ -432,7 +450,7 @@ Figure 1.3: 有多个年度的html页面
 <span id="cb5-3"><a href="#cb5-3"></a><span class="kw">source</span>(<span class="kw">here</span>(<span class="st">&quot;Rfun&quot;</span>,<span class="st">&quot;extract-from-html.R&quot;</span>))</span></code></pre></div>
 </div>
 <div id="获得html文件位置" class="section level3">
-<h3><span class="header-section-number">2.2.2</span> 获得html文件位置</h3>
+<h3><span class="header-section-number">3.2.2</span> 获得html文件位置</h3>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="co"># files html path</span></span>
 <span id="cb6-2"><a href="#cb6-2"></a>files_dir &lt;-<span class="st"> </span>here<span class="op">::</span><span class="kw">here</span>(<span class="st">&quot;data&quot;</span>, <span class="st">&quot;public-budget&quot;</span>,<span class="st">&quot;html&quot;</span>)</span>
 <span id="cb6-3"><a href="#cb6-3"></a>files_html &lt;-<span class="st"> </span><span class="kw">list.files</span>(<span class="kw">str_c</span>(files_dir,<span class="st">&quot;/&quot;</span>))</span>
@@ -446,7 +464,7 @@ Figure 1.3: 有多个年度的html页面
 <p>html文件位于D:/github/team-students/data/public-budget/html/2011-t00.html。</p>
 </div>
 <div id="提取html表格" class="section level3">
-<h3><span class="header-section-number">2.2.3</span> 提取html表格</h3>
+<h3><span class="header-section-number">3.2.3</span> 提取html表格</h3>
 <p>R代码如下：</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="co"># xpath selector</span></span>
 <span id="cb7-2"><a href="#cb7-2"></a>path_tbl&lt;-<span class="st">&quot;/html/body/table[2]/tbody/tr[2]/td/table/tbody/tr/td[2]/table&quot;</span></span>
@@ -490,7 +508,7 @@ Figure 1.3: 有多个年度的html页面
 |地方合计&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;92733.68&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;10084.77&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;2.75&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;198.29&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;5267.26&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;15498.28&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;1885.88&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;1704.64&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;10606.92&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;6358.19&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;2566.79&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;7608.93&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;9520.99&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;7166.69&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;3547.26&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;1394.79&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;235.34&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;174.45&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;1289.74&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;3491.87&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;729.49&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;564.12&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;&lt;U+00A0&gt;2836.25 |</p>
 </div>
 <div id="探查html表格的构成" class="section level3">
-<h3><span class="header-section-number">2.2.4</span> 探查html表格的构成</h3>
+<h3><span class="header-section-number">3.2.4</span> 探查html表格的构成</h3>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="co"># detect the start and end row</span></span>
 <span id="cb8-2"><a href="#cb8-2"></a>first_end &lt;-<span class="st"> </span><span class="kw">which</span>(<span class="kw">str_detect</span>(tbl_raw<span class="op">$</span>X1,<span class="st">&quot;地方合计|新疆&quot;</span>))</span>
 <span id="cb8-3"><a href="#cb8-3"></a>n_part &lt;-<span class="st"> </span><span class="kw">length</span>(first_end)<span class="op">/</span><span class="dv">2</span></span>
@@ -502,7 +520,7 @@ Figure 1.3: 有多个年度的html页面
 <p>同时，可以探查到表格<strong>主体</strong>的范围8-39行之间。</p>
 </div>
 <div id="识别html表格对齐模式" class="section level3">
-<h3><span class="header-section-number">2.2.5</span> 识别html表格对齐模式</h3>
+<h3><span class="header-section-number">3.2.5</span> 识别html表格对齐模式</h3>
 <p>R代码如下：</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="co"># handle the extra rows</span></span>
 <span id="cb9-2"><a href="#cb9-2"></a>pro_extra &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;地方合计&quot;</span>,<span class="st">&quot;内蒙古&quot;</span>,<span class="st">&quot;黑龙江&quot;</span>)</span>
@@ -542,7 +560,7 @@ Figure 1.3: 有多个年度的html页面
 <span id="cb10-5"><a href="#cb10-5"></a><span class="st">  </span><span class="kw">add_column</span>(<span class="dt">index=</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(.), <span class="dt">.before =</span> <span class="st">&quot;begin&quot;</span>) <span class="op">%&gt;%</span></span>
 <span id="cb10-6"><a href="#cb10-6"></a><span class="st">  </span><span class="kw">kable</span>(<span class="dt">caption =</span> <span class="st">&quot;检查排列的关系&quot;</span>)</span></code></pre></div>
 <table>
-<caption><span id="tab:unnamed-chunk-11">Table 2.1: </span>检查排列的关系</caption>
+<caption><span id="tab:unnamed-chunk-11">Table 3.1: </span>检查排列的关系</caption>
 <thead>
 <tr class="header">
 <th align="right">index</th>
@@ -632,7 +650,7 @@ Figure 1.3: 有多个年度的html页面
 </ul>
 </div>
 <div id="获得整齐表格" class="section level3">
-<h3><span class="header-section-number">2.2.6</span> 获得整齐表格</h3>
+<h3><span class="header-section-number">3.2.6</span> 获得整齐表格</h3>
 <p>R代码如下：</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="co"># get the data.frame</span></span>
 <span id="cb11-2"><a href="#cb11-2"></a>tbl_pair &lt;-<span class="st"> </span>tbl_html <span class="op">%&gt;%</span></span>
@@ -1615,7 +1633,7 @@ Figure 1.3: 有多个年度的html页面
 </div>
 </div>
 <div id="目标2获得原始文件的列标题" class="section level1">
-<h1><span class="header-section-number">3</span> 目标2：获得原始文件的列标题</h1>
+<h1><span class="header-section-number">4</span> 目标2：获得原始文件的列标题</h1>
 <p>R代码如下：</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="co"># get the header from raw html</span></span>
 <span id="cb13-2"><a href="#cb13-2"></a><span class="co">### the pattern</span></span>

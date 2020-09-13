@@ -108,6 +108,7 @@ include_graphics("../pic/public-budget/view-normal.png")
 include_graphics("../pic/public-budget/view-source.png")
 ```
 
+全部原始html文件可以查看github[仓库](https://github.com/huhuaping/team-students/tree/dev/data/public-budget/html)
 
 ```{r, fig.cap= "有多个年度的html页面"}
 include_graphics("../pic/public-budget/files-list.png")
