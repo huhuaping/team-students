@@ -1,0 +1,485 @@
+---
+title: "html异常表格提取技术——各地区一般公共支出数据为例"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    css: css/style.css
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+    mathjax: local
+    self_contained: no
+  bookdown::word_document2: 
+    fig_caption:  true
+    toc: no
+    toc_depth: 1
+    reference_docx: template-post.docx
+  html_document:
+    theme: united
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: header.tex
+      before_body: preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+---
+
+```{r global_options, echo=F,message=FALSE,warning=F}
+knitr::opts_chunk$set(echo=T, warning=FALSE, message=FALSE,
+                      fig.align='center',fig.width=10, fig.height=7) # Places figures on their own pages
+options(
+  htmltools.dir.version = FALSE, 
+  formatR.indent = 2, width = 55, 
+  digits = 2,scipen=999,tinytex.verbose = TRUE,
+  knitr.kable.NA = '',
+  fig.width=12, fig.height=8)
+library('bookdown')
+library('knitr')
+library('xlsx')
+library("openxlsx")
+#install.packages('tidyr')
+#install.packages('plyr')
+library('tidyr')
+library('dplyr')
+library('stringr')
+library('tidyverse')
+library('ggplot2')
+library("scales")
+#install.packages("gridExtra")
+library("gridExtra")
+#install.packages("magrittr")
+library("magrittr")
+#install.packages("ggthemes")
+#install.packages("ggrepel")
+require("ggthemes")
+require("ggrepel")
+require("lubridate")
+require("here")
+```
+
+
+# 范附件
+
+## 1.产生模拟数据
+
+```{r}
+rm(list=ls())
+library(MASS)
+
+##定义一个产生多元正态分布的随机向量协方差矩阵
+Simu_Multi_Norm<-function(x_len, sd = 1, pho = 0.5){
+  #初始化协方差矩阵
+  V <- matrix(data = NA, nrow = x_len, ncol = x_len)
+  
+  #mean及sd分别为随机向量x的均值和方差
+  
+  #对协方差矩阵进行赋值pho(i,j) = pho^|i-j|
+  for(i in 1:x_len){ ##遍历每一行
+    for(j in 1:x_len){ ##遍历每一列
+      V[i,j] <- pho^abs(i-j)
+    }
+  }
+  
+  V<-(sd^2) * V
+  return(V)
+}
+
+##产生模拟数值自变量X
+set.seed(123)
+X<-mvrnorm(n = 500, mu = rep(0,10), Simu_Multi_Norm(x_len = 10,sd  = 1, pho = 0.5))
+
+##产生模拟数值：响应变量y
+beta<-c(1,2,0,0,3,0,0,0,-2,0)
+
+prob<-exp( X %*% beta)/(1+exp( X %*% beta))
+
+y<-rbinom(n = 500, size = 1,p = prob)
+
+##产生model matrix
+mydata<-data.frame(X = X, y = y)
+
+```
+
+
+
+
+
+
+
+
+
+## 2.用GLM产生初值
+
+
+```{r}
+
+loglikelihood<-function(X, y, b){
+  linear_comb<-as.vector(X %*% b)
+  ll<-sum(y*linear_comb) + sum(log(1/(1+exp(linear_comb))))
+  return (ll)
+}
+
+b_real<-beta
+##初始化系数
+b0<-rep(0,length(b_real))
+
+#b0<- b_real+rnorm(length(b_real), mean = 0, sd = 0.1)
+
+
+##b1用于记录更新系数
+b1<-b0
+
+##b.best用于存放历史最大似然值对应系数
+b.best<-b0
+
+# the initial value of loglikelihood
+
+ll.old<-loglikelihood(X = X,y = y, b = b0)
+
+
+# initialize the difference between the two steps of theta
+diff<-1  
+#record the number of iterations
+iter<-0
+#set the threshold to stop iterations
+epsi<-1e-10
+#the maximum iterations  
+max_iter<-10000
+#初始化一个列表用于存放每一次迭代的系数结果
+b_history<-list(data.frame(b0))
+
+#初始化列表用于存放似然值
+ll_list<-list(ll.old)
+
+
+
+#-------Gauss-Seidel 迭代-------
+while(diff > epsi & iter < max_iter){
+  for(j in 1:length(b_real)){
+    #对j循环，对每个系数最优化
+    
+    #线性部分
+    linear_comb<-as.vector(X %*% b0)
+    
+    #分子
+    nominator<-sum(y*X[,j] - X[,j] * exp(linear_comb)/(1+exp(linear_comb)))
+    #分母,即二阶导部分
+    denominator<-  -sum(X[,j]^2 * exp(linear_comb)/(1+exp(linear_comb))^2)
+    #
+    b0[j]<-b0[j] - nominator/denominator
+    #更新似然值
+    ll.new<- loglikelihood(X = X, y = y, b = b0)
+    
+    #     #若似然值有所增加，则将当前系数保存
+    if(ll.new > ll.old){
+      #更新系数
+      b.best[j]<-b0[j]
+    }
+    
+    #求差异
+    diff<- abs((ll.new - ll.old)/ll.old)
+    ll.old <- ll.new
+    iter<- iter+1 
+    ##当达到停止条件时，跳出循环
+    if(diff < epsi){
+      break
+    }
+    
+  }
+  
+  
+}
+
+iter
+#结果迭代了171次
+
+b.best
+
+```
+
+
+
+
+## 3.SCAD
+
+```{r}
+########----定义惩罚项相关的函数-----------------
+
+
+##定义惩罚项
+
+##若lambda设置为2，则系数全被压缩为0.
+
+####本程序根据rcvreg用CV选出来的lambda设置一个较为合理的lambda。
+
+p_lambda<-function(theta,a = 3.7,lambda = 0.025){
+  theta.abs=abs(theta)
+  if(theta.abs > lambda){
+    if(a * lambda > theta.abs){
+      return((theta.abs^2-2*a*lambda*theta.abs+lambda^2 )/(2-2*a ))#这儿化简了一下
+    }else{
+      return((a+1)*lambda^2/2)
+    }
+  }else{
+    return(lambda*theta.abs)
+  }
+}
+
+##定义惩罚项导数
+
+p_lambda_d<-function(theta,a = 3.7,lambda = 0.025){
+  theta.abs=abs(theta)
+  if(theta.abs > lambda){
+    if(a * lambda > theta.abs){
+      return((a * lambda - theta)/(a - 1))
+    }else{
+      return(0)
+    }
+  }else{
+    return(lambda)
+  }
+}
+
+
+#define the log-likelihood function
+loglikelihood_SCAD<-function(X, y, b){
+  linear_comb<-as.vector(X %*% b)
+  plambda=rep(0,length(b_real))
+  for (i in 1:length(b_real)){
+    plambda[i]<-p_lambda(theta = b[i])
+  }
+  ll<-sum(y*linear_comb) + sum(log(1/(1+exp(linear_comb)))) +nrow(X)*sum(plambda)
+  return (ll)
+}
+
+
+
+
+b0<-b.best ##将无惩罚时的优化结果作为初始值
+
+#b0<-rep(1,10) 试一下其他的
+
+b1<-b0  #用b1记录更新次数
+
+##b.best用于存放历史最大似然值对应系数
+b.best_SCAD<-b0
+# the initial value of loglikelihood
+
+
+
+# initialize the difference between the two steps of theta
+diff<-1  
+#record the number of iterations
+iter<-0
+#set the threshold to stop iterations
+epsi<-1e-10
+#the maximum iterations  
+max_iter<-10000
+#初始化一个列表用于存放每一次迭代的系数结果
+b_history<-list(data.frame(b0))
+
+#初始化列表用于存放似然值
+ll_list<-list(ll.old)
+
+# the initial value of loglikelihood
+
+ll.old<-loglikelihood_SCAD(X = X,y = y, b = b0)
+
+
+
+#######-------SCAD迭代---------
+while(diff > epsi & iter < max_iter){
+  for(j in 1:length(b_real)){
+    if(abs(b0[j]) < 1e-06){
+      next()
+    }else{
+      
+      #线性部分
+      linear_comb<-as.vector(X %*% b0)
+      
+      #分子
+      nominator<-sum(y*X[,j] - X[,j] * exp(linear_comb)/(1+exp(linear_comb))) + 
+        nrow(X)*b0[j]*p_lambda_d(theta = b0[j])/abs(b0[j])
+      
+      
+      #分母,即二阶导部分
+      denominator<- -sum(X[,j]^2 * exp(linear_comb)/(1+exp(linear_comb))^2) +
+        nrow(X)*p_lambda_d(theta = b0[j])/abs(b0[j])
+      
+      #2-(3) :更新b0[j]
+      b0[j]<-b0[j] - nominator/denominator
+      
+      #2-(4)
+      if(abs(b0[j]) < 1e-06){
+        b0[j] <- 0
+      }
+      
+    }
+  }
+  
+  #更新似然值
+  ll.new<- loglikelihood_SCAD(X = X, y = y, b = b0)
+  
+  
+  
+  #若似然值有所增加，则将当前系数保存
+  if(ll.new > ll.old){
+    #更新系数
+    b.best_SCAD<-b0
+  }
+  
+  #求差异
+  diff<- abs((ll.new - ll.old)/ll.old)
+  ll.old <- ll.new
+  iter<- iter+1 
+  b_history[[iter]]<-data.frame(b0)
+  ll_list[[iter]]<-ll.old
+  
+  
+}
+
+#
+iter
+##结果是12 可见只更新了12次就达到了最优值 和论文中一致，在选择一个合适的最优值后，只需要迭代少数次就可以收敛
+##
+b.best_SCAD
+
+cbind(beta,b.best,b.best_SCAD)##真实值、GLM估计的值、用GLM作为初值的SACD估计的值对比
+
+```
+
+
+# ncpen工具包
+
+ncpen包[cran主站](https://cran.r-project.org/web/packages/ncpen/)
+
+包开发者的github[网站](https://github.com/zeemkr/ncpen)
+
+
+以下附加上案例说明和R代码
+
+- 案例说明[pdf]()
+
+```{r}
+#install.packages("ncpen")
+
+library("ncpen")
+
+# ~20MB file. This may take a couple of minutes depending on network speed.
+prepay.data = read.csv(file = "https://raw.githubusercontent.com/zeemkr/data/master/mtg_term_2011_2012.csv")
+
+#write.csv(prepay.data, "prepay.data.csv")
+
+#head(prepay.data)
+#dim(prepay.data)
+
+#prepay <- read.csv("prepay.data.csv", header =  TRUE)
+
+smry_tbl <- prepay %>% 
+  group_by(prepaid) %>%
+  summarise(tol = n())
+
+smry_tbl2 <- prepay %>% 
+  group_by(prepaid) %>%
+  summarise(avr_DTI = mean(DTI))
+
+reduced_tbl <- prepay %>%
+  filter(prepaid ==TRUE)
+
+install.packages("tidyverse")
+
+str_raw <- "报告第三章对2017年旱区农业技术产出情况进行了分析，主要分为五个章节。第一节分析了2017年旱区农业领2008域三种专利的授权与分布情况，第二节汇总了2017年旱区各省（市、区）植物新品种权申请和授权情况，2020第三节分析了2017年SCI、EI和ISTP三大检索数据库收录的旱区农业领域科技论文数量变化与分布情况，第四节从国家级和省级两个层面对比了2017年旱区农业领域科技奖"
+
+str_raw %>% str_extract_all(., "\\d{4}")%>% .[[1]]  %>% unique(.)
+
+
+# Data manipulation
+ncpen.data = prepay.data
+
+# Convert a cateorical variables to multiple indicator variables.
+ncpen.data = cbind(ncpen.data, to.indicators(subset(ncpen.data, select = "CHANNEL"), exclude.base = TRUE, base = "B"))
+
+# Now remove the categorical variable.
+ncpen.data$CHANNEL = NULL
+
+# Include all possible interactions in X.
+# The first column is the beginning of year (BOY) and
+# the second column is prepaid indicator (y variable). 
+# So, only interact X, ncpen.data[, -c(1,2)].
+# Then, bind to the original data set.
+ncpen.data = cbind(ncpen.data, interact.data(ncpen.data[, -c(1,2)], base.cols = c("CHANNEL", "loan_age"),
+                                       exclude.pair = list(c("FTHB", "Purchase"), c("FTHB", "Primary"))))
+head(ncpen.data)
+
+# Train data set, BOY == 2011 and test data set, BOY == 2012
+# The second column is y (prepaid = 0 or 1)
+# X starts from the third column
+y.vec.train = ncpen.data[ncpen.data$BOY == 2011, 2]
+x.mat.train = ncpen.data[ncpen.data$BOY == 2011, -c(1,2)]
+
+set.seed(123)
+sample.idx = sample(1:length(y.vec.train), 5000)
+y.vec.train = y.vec.train[sample.idx]
+x.mat.train = x.mat.train[sample.idx,]
+
+
+y.vec.test = ncpen.data[ncpen.data$BOY == 2012, 2]
+x.mat.test = ncpen.data[ncpen.data$BOY == 2012, -c(1,2)]
+
+
+# 1. GLM test
+train.df = as.data.frame(cbind(y.vec.train, x.mat.train))
+glm.fit = glm(y.vec.train~., data=train.df,family="binomial")
+summary(glm.fit)
+
+# number of coefficients
+sum(!is.na(coef(glm.fit)))
+
+# MAE
+glm.fit.coef = coef(glm.fit)
+glm.fit.coef[is.na(glm.fit.coef)] = 0
+exb.vec = exp(drop(as.matrix(cbind(1, x.mat.test))%*%glm.fit.coef))
+ph.vec = exb.vec/(1+exb.vec)
+nyh.vec = ph.vec > 0.5
+mean(abs(y.vec.test - nyh.vec))
+
+#sqrt(mean((y.vec.test - ph.vec)^2))
+
+# 2. ncpen test
+# This may take a couple of minutes...
+cv.ncpen.fit = cv.ncpen(y.vec.train, as.matrix(x.mat.train), family = "binomial", penalty = "scad")
+
+cv.ncpen.coef = as.matrix(cv.ncpen.fit$opt.ebeta)
+rownames(cv.ncpen.coef) = c("Intercept", colnames(x.mat.train))
+cv.ncpen.coef
+
+# number of coefficients selected
+sum(cv.ncpen.coef!=0)
+
+# MAE
+exb.vec = exp(drop(as.matrix(cbind(1, x.mat.test))%*%cv.ncpen.fit$opt.ebeta))
+ph.vec = exb.vec/(1+exb.vec)
+nyh.vec = ph.vec > 0.5
+mean(abs(y.vec.test - nyh.vec))
+
+#sqrt(mean((y.vec.test - ph.vec)^2))
+
+```
+
+
