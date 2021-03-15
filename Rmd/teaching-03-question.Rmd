@@ -1,0 +1,350 @@
+---
+title: "2020秋访谈结果"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output:
+  bookdown::word_document2: 
+    fig_caption:  true
+    toc: no
+    toc_depth: 1
+    reference_docx: template-post.docx
+  bookdown::html_document2:
+    css: css/style.css
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+    mathjax: local
+    self_contained: no
+  html_document:
+    theme: united
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: header.tex
+      before_body: preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+---
+
+```{r global_options, echo=F,message=FALSE,warning=F}
+knitr::opts_chunk$set(echo=F, warning=FALSE, message=FALSE,
+                      fig.align='center',fig.width=5, fig.height=4) # Places figures on their own pages
+options(
+  htmltools.dir.version = FALSE, 
+  formatR.indent = 2, width = 55, 
+  digits = 2,scipen=999,tinytex.verbose = TRUE,
+  knitr.kable.NA = '',
+  fig.width=12, fig.height=8)
+library('bookdown')
+library('knitr')
+library('xlsx')
+library("openxlsx")
+#install.packages('tidyr')
+#install.packages('plyr')
+library('tidyr')
+library('dplyr')
+library('stringr')
+library('tidyverse')
+library('ggplot2')
+library("scales")
+#install.packages("gridExtra")
+library("gridExtra")
+#install.packages("magrittr")
+library("magrittr")
+#install.packages("ggthemes")
+#install.packages("ggrepel")
+require("ggthemes")
+require("ggrepel")
+require("lubridate")
+require("here")
+```
+
+
+
+# 访谈数据表
+
+```{r, echo=F}
+question <- readxl::read_xlsx("../data/df-raw.xlsx") 
+
+```
+
+
+```{r, eval=FALSE, echo=F}
+df_gather <- question %>%
+  gather(key = "questions",value = "answers", -1) %>%
+  mutate(questions =replace_na(questions, "NULL"),
+         answers =replace_na(answers, "NULL")) %>%
+  mutate(out = str_c("（问题）",questions,"。（回答）",answers)) %>%
+  rename("index"="编号") %>%
+  select(index, out) %>%
+  nest(out) %>%
+  #mutate(out =map(data, .f =function(x){replace_na(x$out, replace="NULL") })) %>%
+  mutate(output = map_chr(data, .f =function(.x)str_c(.x$out, collapse = " /n"))) %>%
+  select(-data) %>%
+  unnest() %>%
+  mutate(index = str_c("# ", index)) %>%
+  select(index, output) 
+  
+#df_gather$output[[1]]
+```
+
+
+
+# 访谈记录
+
+```{r, echo=F}
+df <- question %>%
+  rename("index"="编号",
+         "names"="1.你的姓名？") %>%
+  mutate(index=str_c("## ", index, names))
+names(question)
+```
+
+
+```{r, results="asis" , echo=F, eval=FALSE}
+
+for (i in 1:nrow(df)){ # nrow(dt)
+    cat("  \n")
+    cat(df$index[i])
+    cat("  \n")
+    for (j in 2:ncol(df)){
+      cat(str_c( "（问题）",names(df)[j], "（回答）",df[i,j]))
+      cat("  \n")
+    }
+   
+}
+
+
+```
+
+# 访谈分析
+
+ [1] "8.你觉得目前压力大吗？"                           
+ [2] "10.如果你能改变自己，你最希望改变的是什么？"      
+ [3] "14.你对手机上网的依赖程度如何？"                  
+ [4] "18.你与周围朋友或同学产生误会或不愉快的次数＿＿？"
+ [5] "28.对大一期间的生活和学习的总体满意度？"          
+ [6] "29.关于入_党_的状态是？"                          
+ [7] "30.关于职业理想？"                                
+ [8] "33.你的英语四六级状态是？"                        
+ [9] "34.毕业后打算？以及具体目标:毕业后打算？"         
+[10] "38.有无个人电脑（笔记本、台式机）？"   
+
+```{r}
+names_eng <- c("press", "change", "mobile", "conflict",
+               "satisfication", "party", "profession",
+               "english", "aim","pc")
+
+analysis <- question %>%
+  select(!contains("选项填空")) %>%
+  select(matches("8|10|14|28|29|30|33|34|38")) %>%
+  select(!matches("具体目标？")) %>%
+  rename_all(~names_eng)
+
+names(analysis)
+#names(question)
+```
+
+分别绘制饼图：
+
+## 压力
+
+```{r}
+analysis %>%
+  select(press) %>%
+  mutate(press = factor(press, levels = c("A.快要崩溃", "B.压力大", "C.一般", "D.没什么压力"))) %>%
+  group_by(press) %>%
+  summarise(n = n()) %>%
+  #add_row(press="A.快要崩溃", n=0) %>%
+  arrange(press) %>%
+  mutate(ypos = cumsum(n)- 0.25*n ) %>%
+  ggplot(aes(x=0, y = n, fill= press)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) +
+  theme_void() + 
+  theme(legend.position="right") +
+  scale_fill_discrete(name = "你觉得目前压力大吗？") +
+  geom_text(aes(label = n),position = position_stack(vjust = 0.5), color = "white", size=6) +
+  scale_x_continuous(expand = c(0,0))
+```
+
+## 手机依赖
+
+```{r}
+analysis %>%
+  select(mobile) %>%
+  group_by(mobile) %>%
+  summarise(n = n()) %>%
+  #add_row(press="A.快要崩溃", n=0) %>%
+  arrange(mobile) %>%
+  mutate(ypos = cumsum(n)- 0.25*n ) %>%
+  ggplot(aes(x=0, y = n, fill= mobile)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) +
+  theme_void() + 
+  theme(legend.position="right") +
+  scale_fill_discrete(name = "你对手机上网的依赖程度如何？") +
+  geom_text(aes(label = n),position = position_stack(vjust = 0.5), color = "white", size=6) +
+  scale_x_continuous(expand = c(0,0))
+```
+
+## 同学冲突
+
+```{r}
+analysis %>%
+  select(conflict) %>%
+  group_by(conflict) %>%
+  summarise(n = n()) %>%
+  #add_row(press="A.快要崩溃", n=0) %>%
+  arrange(conflict) %>%
+  mutate(ypos = cumsum(n)- 0.25*n ) %>%
+  ggplot(aes(x=0, y = n, fill= conflict)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) +
+  theme_void() + 
+  theme(legend.position="right") +
+  scale_fill_discrete(name = "你与周围朋友或\n同学产生误会\n或不愉快的次数？") +
+  geom_text(aes(label = n),position = position_stack(vjust = 0.5), color = "white", size=6) +
+  scale_x_continuous(expand = c(0,0))
+```
+
+## 满意度
+
+```{r}
+analysis %>%
+  select(satisfication) %>%
+  group_by(satisfication) %>%
+  summarise(n = n()) %>%
+  #add_row(press="A.快要崩溃", n=0) %>%
+  arrange(satisfication) %>%
+  mutate(ypos = cumsum(n)- 0.25*n ) %>%
+  ggplot(aes(x=0, y = n, fill= satisfication)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) +
+  theme_void() + 
+  theme(legend.position="right") +
+  scale_fill_discrete(name = "对大一期间的生活和\n学习的总体满意度？") +
+  geom_text(aes(label = n),position = position_stack(vjust = 0.5), color = "white", size=6) +
+  scale_x_continuous(expand = c(0,0))
+```
+
+## 理想信念
+
+```{r}
+analysis %>%
+  select(party) %>%
+  group_by(party) %>%
+  summarise(n = n()) %>%
+  #add_row(press="A.快要崩溃", n=0) %>%
+  arrange(party) %>%
+  mutate(ypos = cumsum(n)- 0.25*n ) %>%
+  ggplot(aes(x=0, y = n, fill= party)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) +
+  theme_void() + 
+  theme(legend.position="right") +
+  scale_fill_discrete(name = "你的理想信念？") +
+  geom_text(aes(label = n),position = position_stack(vjust = 0.5), color = "white", size=6) +
+  scale_x_continuous(expand = c(0,0))
+```
+
+## 职业理想
+
+```{r}
+analysis %>%
+  select(profession) %>%
+  group_by(profession) %>%
+  summarise(n = n()) %>%
+  #add_row(press="A.快要崩溃", n=0) %>%
+  arrange(profession) %>%
+  mutate(ypos = cumsum(n)- 0.25*n ) %>%
+  ggplot(aes(x=0, y = n, fill= profession)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) +
+  theme_void() + 
+  theme(legend.position="right") +
+  scale_fill_discrete(name = "关于职业理想？") +
+  geom_text(aes(label = n),position = position_stack(vjust = 0.5), color = "white", size=6) +
+  scale_x_continuous(expand = c(0,0))
+```
+
+## 英语过级考试
+
+```{r}
+analysis %>%
+  select(english) %>%
+  group_by(english) %>%
+  summarise(n = n()) %>%
+  #add_row(press="A.快要崩溃", n=0) %>%
+  arrange(english) %>%
+  mutate(ypos = cumsum(n)- 0.25*n ) %>%
+  ggplot(aes(x=0, y = n, fill= english)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) +
+  theme_void() + 
+  theme(legend.position="right") +
+  scale_fill_discrete(name = "你的英语四六级状态是？") +
+  geom_text(aes(label = n),position = position_stack(vjust = 0.5), color = "white", size=6) +
+  scale_x_continuous(expand = c(0,0))
+
+```
+
+## 未来打算
+
+```{r}
+analysis %>%
+  select(aim) %>%
+  group_by(aim) %>%
+  summarise(n = n()) %>%
+  #add_row(press="A.快要崩溃", n=0) %>%
+  arrange(aim) %>%
+  mutate(ypos = cumsum(n)- 0.25*n ) %>%
+  ggplot(aes(x=0, y = n, fill= aim)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) +
+  theme_void() + 
+  theme(legend.position="right") +
+  scale_fill_discrete(name = "毕业后打算？") +
+  geom_text(aes(label = n),position = position_stack(vjust = 0.5), color = "white", size=6) +
+  scale_x_continuous(expand = c(0,0))
+
+```
+
+## 电脑情况
+
+```{r}
+analysis %>%
+  select(pc) %>%
+  group_by(pc) %>%
+  summarise(n = n()) %>%
+  #add_row(press="A.快要崩溃", n=0) %>%
+  arrange(pc) %>%
+  mutate(ypos = cumsum(n)- 0.25*n ) %>%
+  ggplot(aes(x=0, y = n, fill= pc)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) +
+  theme_void() + 
+  theme(legend.position="right") +
+  scale_fill_discrete(name = "有无个人电脑？") +
+  geom_text(aes(label = n),position = position_stack(vjust = 0.5), color = "white", size=6) +
+  scale_x_continuous(expand = c(0,0))
+
+```
+
+
+
+
