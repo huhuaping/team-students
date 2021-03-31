@@ -79,7 +79,6 @@ require("here")
 
 ```{r, echo=F}
 question <- readxl::read_xlsx("../data/df-raw.xlsx") 
-
 ```
 
 
@@ -107,21 +106,34 @@ df_gather <- question %>%
 # 访谈记录
 
 ```{r, echo=F}
+talk<- c("吴楚雄",
+"黄海帆",
+"孙海浪",
+"丁慧洁",
+"韦佳斐",
+"黄甜",
+"张西婷",
+"钱秋妤",
+"李卓航",
+"周心怡")
+
 df <- question %>%
   rename("index"="编号",
          "names"="1.你的姓名？") %>%
+  #filter(names %in% talk) %>% # talk list
   mutate(index=str_c("## ", index, names))
-names(question)
+#names(df)
 ```
 
 
-```{r, results="asis" , echo=F, eval=FALSE}
+```{r, results="asis" , echo=F, eval=T}
 
 for (i in 1:nrow(df)){ # nrow(dt)
     cat("  \n")
     cat(df$index[i])
     cat("  \n")
-    for (j in 2:ncol(df)){
+    for (j in 8:13){  # for interested questions 
+    #for (j in 2:ncol(df)){ # for all questions 
       cat(str_c( "（问题）",names(df)[j], "（回答）",df[i,j]))
       cat("  \n")
     }
@@ -130,6 +142,7 @@ for (i in 1:nrow(df)){ # nrow(dt)
 
 
 ```
+
 
 # 访谈分析
 

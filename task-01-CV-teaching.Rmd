@@ -4,7 +4,6 @@ author: "胡华平"
 date: "`r Sys.Date()`"
 output:
   bookdown::html_document2:
-    css: css/style.css
     highlight: tango
     number_sections: yes
     toc: yes
@@ -87,7 +86,7 @@ smry.year <- data_teach %>%
   left_join(., data_major,by="year")
 ```
 
-本人从事本科教学工作`r max(smry.year$year)-min(smry.year$year)+1`年，教授本科生课程有`r str_c(levels(data_teach$course),collapse="、") `。截至2019年春季，**累计**授课`r sum(smry.year$hours.tot)`学时，**年均**授课`r formatC(mean(smry.year$hours.tot),digits=0, format="f")`学时；**累计**授课学生`r sum(smry.year$students.tot)`人次，**年均**授课学生`r formatC(mean(smry.year$students.tot),digits=0, format="f")`人次。
+本人从事本科教学工作`r max(smry.year$year)-min(smry.year$year)+1`年，教授本科生课程有`r str_c(levels(data_teach$course),collapse="、") `。截至2021年春季，**累计**授课`r sum(smry.year$hours.tot)`学时，**年均**授课`r formatC(mean(smry.year$hours.tot),digits=0, format="f")`学时；**累计**授课学生`r sum(smry.year$students.tot)`人次，**年均**授课学生`r formatC(mean(smry.year$students.tot),digits=0, format="f")`人次。
 
 ```{r teach-smry, fig.cap="历年任课情况（截至2019年春）"}
 # show summary table
@@ -128,10 +127,10 @@ smry.class <- data_tutor %>%
 
 ```
 
-截至2019年春季，本人共指导大学生科创项目项`r sum(smry.class$n)`项；其中**国家级项目**`r sum(smry.class$n[which(smry.class$class=="国家重点")])`项。
+截至2021年春季，本人共指导大学生科创项目项`r sum(smry.class$n)`项；其中**国家级项目**`r sum(smry.class$n[which(smry.class$class=="国家重点")])`项。
 
 
-```{r, fig.cap="历年指导大学生科创项目情况（截至2019年春）"}
+```{r, fig.cap="历年指导大学生科创项目情况（截至2021年春）"}
 # show table
 old.names <- names(data_tutor)
 new.names <- c("年份", "学生年级", "学生姓名","学生专业","项目名称","项目级别")
@@ -140,7 +139,7 @@ data_tutor %>%
   rename_at(vars(old.names), ~new.names) %>%
   datatable(rownames = FALSE,
             options = list(
-              pageLength =5,
+              pageLength =16,
               dom="tip",
               columnDefs = list(
                 list(className ='dt-center',
