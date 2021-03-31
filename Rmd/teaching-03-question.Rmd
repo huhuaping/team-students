@@ -87,6 +87,8 @@ dd <- genData(250, def)
 dd <- trtAssign(dd, nTrt = 4, grpName = "grp", balanced = TRUE)
 
 head(dd)
+
+library('fansi')
 ```
 
 
