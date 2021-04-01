@@ -1,0 +1,152 @@
+---
+title: "教学工作"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+    mathjax: local
+    self_contained: no
+  bookdown::word_document2: 
+    fig_caption:  true
+    toc: no
+    toc_depth: 1
+    reference_docx: template/test-ref.docx
+  html_document:
+    theme: united
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: header.tex
+      before_body: preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+require("xlsx")
+require("tidyverse")
+require("DT")
+require("kableExtra")
+```
+
+# 简介
+
+胡华平，男，出生于1982年，祖籍湖南桂阳县。2011年获得农林经济管理博士，同年入职于西北农林科技大学经济管理学院（2011年7月---至今）。担任经济管理学院数量经济教研室主任（2014年---至今），经济管理学院实验教学中心经济学系中心主任（2017年---至今）。求学多年，学艺不精；工作数载，成绩寥寥。爱打羽毛球，讲课嗓门大。
+
+- 主持**教改项目**：胡华平，基于大数据挖掘与分析的在线教育效果评估模型研究，编号16MY09，陕西高等教育MOOC中心，主持人，2万，2016-2018年，已结题。
+
+- 获**荣誉称号**：2015年度西北农林科技大学“学生最喜爱的老师”。
+
+# 教学情况
+
+```{r}
+# load data
+course.levels <- c("统计学原理", "计量经济学", "服务企业营销","技术经济学")
+data_teach <- read.xlsx("../data/teaching-hu.xlsx",
+                        sheetName = "teach",
+                        encoding = "UTF-8",
+                        startRow =2) %>%
+  as_tibble() %>%
+  mutate(year= as.integer(year)) %>%
+  mutate(course=fct_relevel(course,course.levels))
+
+# all majors each year
+data_major <- data_teach %>%
+  select(year, major ) %>%
+  group_by(year) %>%
+  unique() %>%
+  mutate(major.year = str_c(major, sep="", collapse="；")) %>%
+  select(-major) %>%
+  unique()
+
+# summarise by year
+smry.year <- data_teach %>%
+  group_by(year) %>% 
+  summarize(hours.tot=sum(hours),
+            students.tot =sum(students)) %>%
+  ungroup() %>%
+  left_join(., data_major,by="year")
+```
+
+本人从事本科教学工作`r max(smry.year$year)-min(smry.year$year)+1`年，教授本科生课程有`r str_c(levels(data_teach$course),collapse="、") `。截至2021年春季，**累计**授课`r sum(smry.year$hours.tot)`学时，**年均**授课`r formatC(mean(smry.year$hours.tot),digits=0, format="f")`学时；**累计**授课学生`r sum(smry.year$students.tot)`人次，**年均**授课学生`r formatC(mean(smry.year$students.tot),digits=0, format="f")`人次。
+
+```{r teach-smry, fig.cap="历年任课情况（截至2021年春）"}
+# show summary table
+old.names <- names(smry.year)
+new.names <- c("年份", "总学时数", "学生人次","学生专业")
+smry.year %>%
+  arrange(desc(year))  %>%
+  rename_at(vars(old.names), ~new.names) %>%
+  datatable(rownames = FALSE,
+            options = list(
+              #pageLength =5,
+              dom="t",
+              columnDefs = list(
+                list(className ='dt-center',
+                     targets = '_all')
+                )
+            ))
+```
+
+
+# 学生指导情况
+
+
+```{r}
+# load data
+data_tutor <- read.xlsx("../data/teaching-hu.xlsx",
+                        sheetName = "tutor",
+                        encoding = "UTF-8",
+                        startRow =2) %>%
+  as_tibble() %>%
+  select(year, grade, name,major, title,class) 
+
+# summarise by class
+smry.class <- data_tutor %>%
+  group_by(year,class) %>%
+  summarize(n = n() ) %>%
+  ungroup()
+
+```
+
+截至2021年春季，本人共指导大学生科创项目项`r sum(smry.class$n)`项；其中**国家级项目**`r sum(smry.class$n[which(smry.class$class=="国家重点")])`项。
+
+
+```{r, fig.cap="历年指导大学生科创项目情况（截至2021年春）"}
+# show table
+old.names <- names(data_tutor)
+new.names <- c("年份", "学生年级", "学生姓名","学生专业","项目名称","项目级别")
+data_tutor %>%
+  arrange(desc(year,grade))  %>%
+  rename_at(vars(old.names), ~new.names) %>%
+  datatable(rownames = FALSE,
+            options = list(
+              pageLength =16,
+              dom="tip",
+              columnDefs = list(
+                list(className ='dt-center',
+                     targets = '_all')
+                )
+            ))
+
+```
+
+

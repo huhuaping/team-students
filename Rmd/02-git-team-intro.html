@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="胡华平" />
+
+<meta name="date" content="2021-04-01" />
+
+<title>git操作学习</title>
+
+<script src="02-git-team-intro_files/header-attrs-2.7.1/header-attrs.js"></script>
+<script src="02-git-team-intro_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="02-git-team-intro_files/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="02-git-team-intro_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="02-git-team-intro_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="02-git-team-intro_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="02-git-team-intro_files/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="02-git-team-intro_files/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="02-git-team-intro_files/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="02-git-team-intro_files/navigation-1.1/tabsets.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-sm-12 col-md-4 col-lg-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-sm-12 col-md-8 col-lg-9">
+
+
+
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">git操作学习</h1>
+<h4 class="author">胡华平</h4>
+<h4 class="date">2021-04-01</h4>
+
+</div>
+
+
+<p>自学材料：</p>
+<p><a href="https://git-scm.com/book/zh/v2">Pro git book</a>（Scott Chacon and Ben Straub）</p>
+<ul>
+<li><p>第1章<a href="https://git-scm.com/book/zh/v2/%E8%B5%B7%E6%AD%A5-%E5%85%B3%E4%BA%8E%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6">起步</a></p></li>
+<li><p>第2章<a href="https://git-scm.com/book/zh/v2/Git-%E5%9F%BA%E7%A1%80-%E8%8E%B7%E5%8F%96-Git-%E4%BB%93%E5%BA%93">git基础</a></p></li>
+</ul>
+<div id="安装和配置准备工作" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> 安装和配置（准备工作）</h1>
+<div id="安装git-bash" class="section level2" number="1.1">
+<h2><span class="header-section-number">1.1</span> 安装git bash</h2>
+<blockquote>
+<p>此步骤<strong>必须</strong>。</p>
+</blockquote>
+<ul>
+<li><p>下载<a href="https://git-scm.com/downloads">git bash</a>到本地电脑</p></li>
+<li><p>在本地电脑安装<strong>git bash</strong>——强烈建议<strong>默认安装路径</strong>。</p></li>
+</ul>
+</div>
+<div id="申请github账号" class="section level2" number="1.2">
+<h2><span class="header-section-number">1.2</span> 申请github账号</h2>
+<ul>
+<li>进入<a href="https://github.com">github官网</a>申请一个github账号。</li>
+</ul>
+<blockquote>
+<p><a href="mailto:建议使用高校邮箱如xxxx@nwsuaf.edu.cn" class="email">建议使用高校邮箱如xxxx@nwsuaf.edu.cn</a>，高校邮箱有福利（可以建立私有仓库啊，完成你的秘密项目）。</p>
+</blockquote>
+<blockquote>
+<p>记得取一个简单好记的<strong>用户名</strong>；记得改一个有个性的<strong>头像</strong>。（后面协作开发项目的时候，可以更方便沟通和交流！）。</p>
+</blockquote>
+<ul>
+<li>在<strong>Git Bash</strong>窗口，并输入如下代码（这是告诉git，我将以如下身份开始git之旅啦！）：</li>
+</ul>
+<pre><code>$ git config --global user.name &quot;John Doe&quot;
+$ git config --global user.email johndoe@example.com</code></pre>
+</div>
+<div id="安装文本编辑器notepad" class="section level2" number="1.3">
+<h2><span class="header-section-number">1.3</span> 安装文本编辑器Notepad++</h2>
+<blockquote>
+<p>此步骤<strong>非必须</strong>，根据个人爱好而定。</p>
+</blockquote>
+<p>配置默认文本编辑器（text editor）。windows党还是自觉使用Notepad吧，免费又熟悉</p>
+<ul>
+<li><p>下载并在本地电脑安装<a href="https://notepad-plus-plus.org/">Notepad++</a>——强烈建议<strong>默认安装路径</strong></p></li>
+<li><p>在<strong>Git Bash</strong>窗口，并输入如下代码（这是告诉git，我将使用如下的默认文本编辑器）：</p></li>
+</ul>
+<pre><code>$ git config --global core.editor &quot;&#39;C:/Program Files (x86)/Notepad++/notepad++.exe&#39; -multiInst -notabbar -nosession -noPlugin&quot;</code></pre>
+</div>
+<div id="安装并配置合并检查工具p4merge" class="section level2" number="1.4">
+<h2><span class="header-section-number">1.4</span> 安装并配置合并检查工具——p4merge</h2>
+<blockquote>
+<p>此步骤<strong>非必须</strong>，看你是不是git重度用户。</p>
+</blockquote>
+<p>配置合并检查工具（mergetool）。这个必须要图形化GUI的，p4merge就是一个不错的选择。</p>
+<ul>
+<li>下载并在<strong>本地电脑</strong>安装<a href="https://www.perforce.com/products/helix-core-apps/merge-diff-tool-p4merge">p4merge</a>。————强烈建议<strong>默认安装路径</strong>。</li>
+</ul>
+<blockquote>
+<p>windowns系统下默认安装路径一般为<code>"C:Program Files\Perforce\p4merge.exe"</code>。</p>
+</blockquote>
+<ul>
+<li>在<strong>Git Bash</strong>窗口，并输入如下代码（这是告诉git，我将使用如下的合并检查工具）：</li>
+</ul>
+<pre><code>$ git config --global diff.tool p4merge
+$ git config --global difftool.p4merge.path &#39;C:\Program Files\Perforce\p4merge.exe&#39;
+
+$ git config --global merge.tool p4merge
+$ git config --global mergetool.p4merge.path &#39;C:\Program Files\Perforce\p4merge.exe&#39;</code></pre>
+</div>
+<div id="检查git配置信息" class="section level2" number="1.5">
+<h2><span class="header-section-number">1.5</span> 检查git配置信息</h2>
+<p>如果上述步骤都做好了，你可以系统地检查一下是不是git配置都正确（如你所愿）啦！</p>
+<ul>
+<li>在<strong>Git Bash</strong>窗口，并输入如下代码（这是告诉git，请列出我所有的git配置信息）：</li>
+</ul>
+<pre><code>$ git config --list</code></pre>
+</div>
+</div>
+<div id="git基础操作" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> git基础操作</h1>
+<div id="准备工作" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> 准备工作</h2>
+<ol style="list-style-type: decimal">
+<li>准备本地电脑上的<strong>工作文件夹</strong>。例如，在<code>d</code>盘新建一个名为<code>project</code>的文件夹，那么工作文件路径就是<code>d:/project/</code>。</li>
+</ol>
+<blockquote>
+<p>工作文件夹最好不要设在系统盘，如c盘。——系统重装可能就麻烦了！</p>
+</blockquote>
+<blockquote>
+<p>文件夹命名<strong>不要</strong>出现中文。——编程世界中还是乖乖用英语吧！</p>
+</blockquote>
+<ol start="2" style="list-style-type: decimal">
+<li>在<strong>Git Bash</strong>窗口，并输入如下代码（这是告诉git，请进入工作文件夹吧）：</li>
+</ol>
+<pre><code>git cd /d/project</code></pre>
+</div>
+<div id="clone克隆一个github在线仓库" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> (clone）克隆一个github在线仓库</h2>
+<p>如果你想学习并改进一个已经github在线的公开项目，你可以把它<strong>克隆</strong>下来：</p>
+<ol style="list-style-type: decimal">
+<li><p>在github网站上找到自己喜欢的在线仓库，例如：<a href="https://github.com/huhuaping/team-students" class="uri">https://github.com/huhuaping/team-students</a></p></li>
+<li><p>在<strong>Git Bash</strong>窗口，并输入如下代码（这是告诉git，请拷贝这个在线仓库吧）：</p></li>
+</ol>
+<pre><code>git clone https://github.com/huhuaping/team-students</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>上述操作会在当前工作目录下创建一个名为 “team-students” 的目录，并在这个目录下初始化一个 .git 文件夹。</li>
+</ol>
+</div>
+<div id="fork派生一个项目" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> (fork)派生一个项目</h2>
+<p>如果你想对一个公开项目（例如，<a href="https://github.com/huhuaping/team-students" class="uri">https://github.com/huhuaping/team-students</a> ）做出自己的贡献，你可以把它fork到你的github账户下。</p>
+<ol style="list-style-type: decimal">
+<li><p>进入<a href="https://github.com">github官方网站</a>，用你的账号密码登陆进去。</p></li>
+<li><p>在浏览器上新建标签页，找到你感兴趣的公开项目（例如，<a href="https://github.com/huhuaping/team-students" class="uri">https://github.com/huhuaping/team-students</a> ）。</p></li>
+</ol>
+<blockquote>
+<p>你也可以直接搜索你感兴趣的任意公开项目</p>
+</blockquote>
+<ol start="3" style="list-style-type: decimal">
+<li><p>对于这个你感兴趣的公开项目，点击网页上大大的<strong>Fork</strong>按钮。</p></li>
+<li><p>这时，你可以在你自己账户下的仓库列表中，看到刚才<strong>Fork</strong>的你感兴趣的项目。</p></li>
+<li><p>在<strong>Git Bash</strong>窗口，并输入如下代码（这是告诉git，请进入工作文件夹吧）：</p></li>
+</ol>
+<pre><code>git clone https://github.com/your-account-name/team-students</code></pre>
+<blockquote>
+<p>注意：这里的<code>your-account-name</code>是你github账户的用户名——因为你把别人的公开项目<strong>（派生）Fork</strong>到自己的账户下啦！</p>
+</blockquote>
+<ol start="6" style="list-style-type: decimal">
+<li>进入工作文件夹。在<strong>Git Bash</strong>窗口，并输入如下代码（这是告诉git，请进入工作文件夹吧）：</li>
+</ol>
+<pre><code>cd  /d/projects/team-students</code></pre>
+<ol start="7" style="list-style-type: decimal">
+<li>新建一个名为<code>git-intro</code>的<strong>分支</strong>（branch），并<strong>检出</strong>（checkout）到这个分支。——<strong>这一步的意义以后再说吧</strong>。在<strong>Git Bash</strong>窗口，并输入如下代码（这是告诉git，请进入工作文件夹吧）：</li>
+</ol>
+<pre><code>git checkout -b git-intro</code></pre>
+</div>
+<div id="对项目进行版本控制" class="section level2" number="2.4">
+<h2><span class="header-section-number">2.4</span> 对项目进行版本控制</h2>
+<ol style="list-style-type: decimal">
+<li>对项目代码进行修改和完善。例如，</li>
+</ol>
+<blockquote>
+<p>打开R项目文件<code>team-students.Rproj</code>，运行Rstudio
+修改其中Rmarkdown文件<code>02-git-team-intro.Rmd</code>的内容，例如增加一行代码。
+保存（save）好修改。</p>
+</blockquote>
+<ol start="2" style="list-style-type: decimal">
+<li><strong>暂存</strong>（stage）修改。在<strong>Git Bash</strong>窗口，并输入如下代码（这是告诉git，把这个文件暂存<strong>stage</strong>起来吧）：</li>
+</ol>
+<pre><code>git add 02-git-team-intro.Rmd</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li><strong>提交</strong>（commit）修改。在<strong>Git Bash</strong>窗口，并输入如下代码（这是告诉git，提交修改，并附注一条信息<code>add a new line</code>）：</li>
+</ol>
+<pre><code>git commit -m &#39;add a new line&#39;</code></pre>
+<ol start="4" style="list-style-type: decimal">
+<li><strong>推送</strong>（push）修改。在<strong>Git Bash</strong>窗口，并输入如下代码（这是告诉git，把我们的修改推送到github云端去吧）：</li>
+</ol>
+<pre><code>git git push origin git-intro</code></pre>
+</div>
+</div>
+<div id="推送本地新建分支" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> 推送本地新建分支</h1>
+<p><a href="https://hackernoon.com/git-push-and-pull-tips-and-tricks-7f9163539f02">参考</a></p>
+<ol style="list-style-type: decimal">
+<li>新建并检出到本地分支（local branch）</li>
+</ol>
+<pre><code>$ git checkout -b dev
+  Switched to a new branch &#39;dev&#39;</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>查看远程分支（remotes）</li>
+</ol>
+<pre><code>$ git remote -v</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>设定上游分支（upstream），以后就可直接推送：语法为<code>git push -u &lt;remote&gt; &lt;branch&gt;</code></li>
+</ol>
+<pre><code>$ git push -u origin feat
+$ git push</code></pre>
+<ol start="4" style="list-style-type: decimal">
+<li>查看上游分支的引用关系</li>
+</ol>
+<pre><code>$ git branch -avv</code></pre>
+</div>
+<div id="常用的git命令" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> 常用的git命令</h1>
+<ol style="list-style-type: decimal">
+<li>如何查看git工作目录？在<strong>Git Bash</strong>窗口，输入并运行如下代码：</li>
+</ol>
+<pre><code>pwd</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>如何视图化查看提交历史、各个分支的指向以及项目的分支分叉情况？</li>
+</ol>
+<pre><code>$ git log --oneline --decorate --graph --all</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li><p>如何退出当前列表？在<strong>Git Bash</strong>窗口，输入并运行代码<code>q</code>，可以直接退出当前的列表<strong>ls</strong>。</p></li>
+<li><p>如何退出<strong>Git Bash</strong>窗口？在<strong>Git Bash</strong>窗口，输入并运行代码<code>exit</code>，可以直接退出<strong>git Bash</strong>窗口</p></li>
+</ol>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "02-git-team-intro_files/mathjax-local/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

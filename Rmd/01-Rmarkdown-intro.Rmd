@@ -1,0 +1,210 @@
+---
+title: "Rmarkdown入门"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+    mathjax: local
+    self_contained: no
+  bookdown::word_document2: 
+    fig_caption:  true
+    toc: no
+    toc_depth: 1
+    reference_docx: template/test-ref.docx
+always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T, message = F, warning = F)
+require("knitr")
+require("bookdown")
+require("xlsx")
+require("tidyverse")
+require("DT")
+require("kableExtra")
+```
+
+自学材料：
+
+[R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/)（Yihui Xie, J. J. Allaire, Garrett Grolemund）
+
+- 第2章[Chapter 2 Basics](https://bookdown.org/yihui/rmarkdown/basics.html)
+
+- 第2章第1节[3.1 HTML document](https://bookdown.org/yihui/rmarkdown/html-document.html)
+
+
+# markdown语言基础
+
+1. 正常段落（paragraph）。行顶头开始写文字（不要空格），结束直接按回车`Enter`（不要留空格）。段落与段落之间留一行空白行。例如，如下代码和效果分别是：
+
+```
+这是第一段落。R markdown语言是一门新兴的写作语言，今天我们一起来学习。
+
+这是第二段落。
+```
+
+这是第一段落。R markdown语言是一门新兴的写作语言，今天我们一起来学习。
+
+这是第二段落。
+
+2. 粗体（bold）、下标（subscript）和上标（upscript）。**粗体**以一对**双星符号**包括d 形式表达（`**字符**`）；**下标**以一对**波浪符号**包括的形式表达（`~字符~`）；**下标**以一对**尖帽符号**包括的形式表达（`^字符^`）。例如，如下代码和效果分别是：
+
+```
+谢益辉是一个毕业于**中国人民大学**的优秀华人。
+
+下标水分子式H~2~O；上标平方米100m^2^。
+```
+
+谢益辉是一个毕业于**中国人民大学**的优秀华人。
+
+下标水分子式H~2~O；上标平方米100m^2^。
+
+
+3. 列表（list）：**无序列表**和**有序列表**。例如，如下代码和效果分别是：
+
+
+```
+无序列表形式1：
+
+- 这是第一小点
+
+- 这是第二小点
+
+```
+
+无序列表形式：
+
+- 这是第一小点
+
+- 这是第二小点
+
+
+```
+有序列表形式：
+
+1. 这是第1小点
+
+2. 这是第2小点。
+
+    - 这是2.1
+    
+    - 这是2.2。
+
+```
+
+有序列表形式：
+
+1. 这是第1小点
+
+2. 这是第2小点。
+
+    - 这是2.1
+    
+    - 这是2.2。
+
+# 公式的编写技巧
+
+1. **行内公式**（inline equation）。采用一对**美元符号**内写Latex的形式（`$LaTex$`），其代码和效果如下：
+
+```
+行内公式就是在一行正常文字内插入公式，比如线性回归模型$Y_t =\beta_1 + \beta_2X_t + u_t$。
+```
+
+行内公式就是在一行正常文字内插入公式，比如线性回归模型$Y_t =\beta_1 + \beta_2X_t + u_t$。
+
+2. **独立公式**（LaTex equation）。采用一对**双美元符号**内写Latex公式的形式（`$LaTex equation$`），其代码和效果如下：
+
+```
+下面将展示一个独立公式的写法：
+
+$$\begin{align}
+Y_i &= \beta_1 +\beta_2X_i +u_i \\
+u_i &\sim N(0, \sigma^2)
+\end{align}$$
+```
+
+下面将展示一个独立公式的写法：
+
+$$\begin{align}
+Y_i &= \beta_1 +\beta_2X_i +u_i \\
+u_i &\sim N(0, \sigma^2)
+\end{align}$$
+
+> 启示，公式编写，我们使用的是LaTex语言。所以你们要了解基本的Latex知识。还有你们需要希腊字母体系，以及统计和计量的基本知识。
+
+
+# 利用R 进行数据分析和制图
+
+简单的编码示例：
+
+```{r}
+x <- 1:100
+y <- c("hhp", "lisi")
+x
+y
+```
+
+数据处理过程:
+
+```{r read-data, echo=TRUE}
+# prepare pkgs
+#install.packages("tidyverse")
+require("tidyverse")
+#install.packages("xlsx")
+require("xlsx")
+
+# read .xlsx file
+data_longley <- read.xlsx("../data/Table-10-8-longley.xlsx", sheetIndex = 1) 
+
+data_new <- data_longley %>%
+  mutate(log.Y =log(Y), 
+         real.GDP = X3/X2)
+
+```
+
+表格形式1（普通表）：
+
+```{r}
+require("knitr")
+require("kableExtra")
+data_new %>%
+  kable(booktab=T,caption = "这是一张傻傻的数据表") %>%
+  kable_styling(full_width = T)
+```
+
+表格形式2（交互表）：
+
+```{r, fig.cap="这是一个比较有意思的交互表"}
+require("DT")
+data_new %>% 
+  datatable(caption = "这是一个比较有意思的交互表",
+    options = list(
+    pageLength= 5,
+    dom="tip"
+  )) %>%
+  formatRound(c(10:11), digits=2)
+```
+
+
+下面我们来制作一幅散点图：
+
+```{r, fig.cap="这是一幅傻傻的散点图"}
+require("ggplot2")
+data_new %>% 
+  as_tibble() %>%
+  mutate(Year=as.factor(Year)) %>%
+  ggplot(aes(Year, real.GDP)) +
+  geom_point(color="blue", size=3) +
+  labs(x="年份(Year)", y= "实际GDP(real.GDP)") 
+```
+
+
+

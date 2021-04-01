@@ -1,0 +1,126 @@
+---
+title: "教学工作"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+    mathjax: local
+    self_contained: no
+  bookdown::word_document2: 
+    fig_caption:  true
+    toc: no
+    toc_depth: 1
+    reference_docx: template/test-ref.docx
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: header.tex
+      before_body: preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+require("xlsx")
+require("tidyverse")
+require("DT")
+require("kableExtra")
+```
+
+
+```{r}
+tab1.tutor <- readxl::read_xlsx("../data/v1-tutor.xlsx", sheet = 1, skip = 5,col_names = T) %>%
+  select(-all_of(contains("备注"))) %>%
+  gather(key = "vars", value = "value", c(-(1:2))) %>%
+  separate(col = "vars", into = paste0("V", 1:4), sep = "-", remove = T)
+
+
+tab2.campus <- readxl::read_xlsx("../data/v1-tutor.xlsx", sheet = 2, skip = 5,col_names = T) %>%  
+  select(-all_of(contains("备注"))) %>%
+  gather(key = "vars", value = "value", c(-(1:5))) %>%
+  separate(col = "vars", into = paste0("V", 1:4), sep = "-", remove = T) %>%
+  mutate_at(vars(contains("年月")), lubridate::year)
+
+tab3.graduate <- readxl::read_xlsx("../data/v1-tutor.xlsx", sheet = 3, skip = 5,col_names = T) %>%
+  mutate_at(vars(contains("年月")), lubridate::year)
+
+write.xlsx(tab1.tutor, "../data/team-tab1-tutor.xlsx")
+write.xlsx(tab2.campus, "../data/team-tab2-campus.xlsx")
+write.xlsx(tab3.graduate, "../data/team-tab3-graduate.xlsx")
+```
+
+
+## 导师统计部分
+
+```{r}
+tab1.tutor %>%
+  filter(V1=="论文") %>%
+  group_by(V2,V3) %>%
+  summarise(n=sum(value, na.rm = T))
+```
+
+
+## 在校学生统计部分
+
+```{r}
+# campus students 
+tab2.campus %>%
+  select(2:4) %>%
+  unique() %>%
+  group_by(`学生类型`) %>%
+  summarise(n=n())
+
+tab2.campus %>%
+  filter(V1=="论文") %>%
+  group_by(V2,V3) %>%
+  summarise(n=sum(value, na.rm = T))
+
+tab2.campus %>%
+  filter(V1=="会议") %>%
+  group_by(V2,V3) %>%
+  summarise(n=sum(value, na.rm = T))
+
+tab2.campus %>%
+  filter(V1=="获奖") %>%
+  group_by(V2,V3) %>%
+  summarise(n=sum(value, na.rm = T))
+```
+
+## 已毕业学生统计
+
+```{r}
+tab3.graduate %>%
+  group_by(`就业去向`) %>%
+  summarise(n= n()) %>%
+  arrange(n)
+
+
+var_list <- c("学生姓名", "入学年月","学生类型","就业去向", "单位名称")
+out_phd <- tab3.graduate %>%
+  select(all_of(var_list)) %>%
+  filter(`学生类型`=="博士") %>%
+  arrange(`入学年月`)
+
+out_master <- tab3.graduate %>%
+  select(all_of(var_list)) %>%
+  filter(`学生类型`=="硕士") %>%
+  arrange(`入学年月`)
+
+write.xlsx2(out_phd, "../data/out-phd.xlsx")
+write.xlsx2(out_master, "../data/out-master.xlsx")
+```
+
+
