@@ -1,0 +1,1194 @@
+---
+title: "project-learn-note"
+author: "xsl"
+date: "2020/12/23"
+output: html_document
+---
+
+# project 1: 截面数据、时序数据的处理
+
+## 一、可能涉及内容
+
+1. 录入多个文件（录入同一文件夹中所有目录）
+
+2. 数据清洗与整理
+
+3. 循环结构
+
+## 二、教程：数据分析的步骤——要有目标意识
+
+1. 了解数据:要去看数据
+
+- 清洗数据，剔除错误数据。eg.“NA”、“ ”、“NaN(不为数的值)”
+
+2. 汇总
+
+3. 分析(用一些模型)
+
+## 三、**本章学习到：**
+
+1. 显示“无法打开链接”时，一般情况是找不到路径，可以用全路径书写，或者用here::here()函数
+
+2. getwd():查看文件所在目录
+
+3. setwd("路径"):更改文件到"路径"目录，但只是设置临时的工作路径
+
+4. dir.create():创建目录，但不级联，只能创建含一个"/"的路径，需要2个则用2次
+
+5. 读取统一文件夹下多个文件
+
+```{r}
+# 胡老师方法（利用有序的文件名读取，并使用for循环结构）（√）
+all_files <- list.files("D:/R/project/agri-trade-open/data/eps/import/HS2002")
+# 要学会用此省略路径写法("../data/eps/import/HS2002")
+n <- length(all_files)   # 计算目录文件夹下的文件数目
+
+path_dir <- here::here("data","eps", "import", "HS2002")
+path_file <- paste0(path_dir, "/",all_files)   # 粘贴path_dir记载目录中所有文件的名字到path_file文件中
+# path_file()返回路径的文件名部分，path_dir()返回目录部分
+
+tbl_hs2002 <- NULL
+for (i in  1:n) {
+  tbl_tem <- read_rds(path_file[i])  # read_rds(path),注意不要写成read_rds(file = path)
+  tbl_hs2002 <- bind_rows(tbl_hs2002, tbl_tem)
+  print(paste0("成功合并到了第", i,"个文件。共有",n,"个文件！"))
+}
+# for循环：其中的一个路线为：读取记录文件名中的一个文件到tbl_tem里，在合并所有tbl_tem的行到tbl_2002文件中
+
+# 写出文件
+write_rds(tbl_hs2002, "D:/R/project/agri-trade-open/data/eps/tbl_hs2002.rds") 
+# 为什么用“..”写的路径一直显示不能打开链接？“..”是表示在当前文件所在目录（getwd查看）的前一个目录？？？
+```
+
+6. 数据清理（阅读“R-learning-note”的21章）
+
+- 筛选
+
+```{r}
+# 方法一：subset
+tbl_2002 <- subset(tbl_hs2002,tbl_hs2002$var == "进口金额（美元）")
+
+# 方法二：filter（胡老师倡导）
+library("tidyverse")
+names(tbl_hs2002)
+tbl_2002 <- tbl_hs2002 %>%
+  dplyr::filter(var=="进口金额（美元）" )
+View(tbl_2002)
+```
+
+
+- 删除(按照某个关键词删除)(!)
+
+```{r}
+# 方法一：which筛选，"!"删除
+new_2002 <- tbl_2002[which(tbl_2002$country != "世界"),]
+view(new_2002)
+
+# 过滤来筛选（用filter替换which),"!"删除
+new_2002 <- dplyr::filter(tbl_2002,country !="世界" )
+View(new_2002)
+
+```
+
+
+- 查看数据类型(四种方法)
+
+```{r}
+mode(x)   # 查询是什么数据类型(用is.函数来判断也可，但容易走弯路)，常用来判断一个数据框中某个变量是什么类型
+mode(new_hs2002$value)
+
+class()  # 函数用来检验数据结构
+
+typeof()   # 查看数据类型最好用此函数
+
+# R语言中数据类型有因子(is.factor)、向量(is.vector)、矩阵(is.matrix)、数组(is.array)、数据框(is.data.frame)、列表(is.list)，同时元素的数据类型有数值型(is.numeric判断)、字符型(is.character判断)、逻辑型(is.logical)
+```
+
+
+- 判断是否为空
+
+```{r}
+is.null()  # 判断向量是否为空值
+
+is.na()  # 检测向量数据中是否存在缺失值(判断向量中的元素是否没有值)
+```
+
+
+- [数值型与字符型转换总结|R语言](https://zhuanlan.zhihu.com/p/30981954)
+
+理论部分主要是R for Data Science的向量节选翻译、《R语言实战》第二章2.2创建数据结构、《R in a Nutshell》以及猴子老师的向量PPT。
+
+
+- 字符型转化为数值型，并将NA转化为0
+
+```{r}
+# 检查数据类型并清洗表格（将字符型转化为数值型）(胡老师方法)
+mode(new_hs2002$value)
+tbl_2002clear <- new_hs2002 %>%
+  mutate(value = str_replace_all(value, ",", ""))  %>%
+  mutate(value = as.numeric(value))
+
+# 将数据框中的NA转化为0
+tbl_2002clear[is.na(tbl_2002clear)] <- 0
+```
+
+
+- [逻辑型向量与比较运算](https://www.math.pku.edu.cn/teachers/lidf/docs/Rbook/html/_Rbook/prog-type-logi.html)
+
+<   <=  >  >=  ==  !=  %in% 分别表示小于、小于等于、大于、大于等于、等于、不等于、属于。 要注意等于比较用了两个等号。%in%是比较特殊的比较，x %in% y的运算把向量y看成集合，运算结果是一个逻辑型向量，第个元素的值为x的第元素是否属于y的逻辑型值。
+
+- [R Brain Storm  R的一些数据分析及公式](https://www.jieandze1314.com/post/cnposts/29/)
+
+- [项目全过程总结，注意里面的数据分析、数据折叠(压缩为list-column data.frame)、数据比较(setdiff()  放在前面是有数据的，放在后面是没有数据的；inersect()你有我也有的数据)、平行计算purrr::map2，如果能将这个文档学好，大数据处理即可操作](https://github.com/huhuaping/agri-trade-open/blob/master/manuscript/analysis-01-eps-case.Rmd)
+
+- [压缩为list-column data.frame](https://stackoverflow.com/questions/9547518/create-a-data-frame-where-a-column-is-a-list)
+
+
+
+# project 2:pork-import-data analysis
+
+## 目的
+
+1. 数据收集
+
+- 内容：猪肉进口数据(数量、贸易额、价格$IP=\frac{IValue}{IQuantity}$)，猪肉国内数据(产量、国内市场价格、产值$DValue=DP*DQuantity$)，猪肉国内消费数据(城、乡居民消费猪肉量)，其他数据(汇率数据)
+
+- 学习点：**爬虫**
+
+2. **数据分析(用R进行分析)**
+
+- 
+
+- 
+
+- 另起一列记录数据处理结果
+
+```{r}
+d <- transform(d, new = A/B)
+
+# example
+women
+women2 <- transform(women, new = weight/height)
+```
+
+
+3. 模型建立
+
+4. 文章写作
+
+## 本项目学习总结
+
+
+
+# project 3:R连接MySQL
+
+- [从 R 连接 MySQL](https://cosx.org/2020/06/connect-mysql-from-r/)
+
+```{r}
+install.packages(c('DBI','RMySQL'))
+```
+
+
+
+
+
+
+# project 4:R语言爬虫
+
+- 【从网页抓取数据】文字可用`readLines()`抓取到R的一个字符向量中，再用`grep()`和`gsub()`处理；稍复杂的可用`RCurl`和`XML`包抓取。(参考胡老师：scrap-v8-03-web-custom-2.2.1自动抓取url的R代码实现{#auto-url})
+- 【Hardly】`rvest()`、`Rcurl()`、`XML()`。
+- 【虚拟机，可处理大数据】借助**docker**(扩容)和**TightVNC**(查看实时交互)，利用`RSelenium`包爬取数据。
+- 【pubmed方法】`RISmed::RISmed()`。
+- [pubmed参考文献](https://blog.csdn.net/weixin_44405279/article/details/104092790?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+- 注意：大数据文件为json文件，需要先加载`rjson`
+- 数据读取的几个函数简析：`scan()`从文件中读取或用键盘输入一个【向量】，可以是数值型、字符型，甚至可以读取数据形成一个列表。`readLine()`从键盘输入单行数据。`print()`可以在函数内部打印变量或表达式。
+
+- 胡老师博客参考文献
+1. 实例：抓取并下载智慧教学云平台资料
+[R+docker进行动态网页数据抓取](https://home.huhuaping.com/2020/02/09/dynamic-web-scraping/)
+2. 实例：抓取EPS数据库(动态网页)
+[自动化数据抓取技术(I)：基础准备](https://home.huhuaping.com/2020/11/30/web-scraping-tech-basic/)
+[自动化数据抓取技术(II)： RSelenium](https://home.huhuaping.com/2020/12/02/web-scraping-tech-rselenium/)
+[自动化数据抓取技术(III)：网页元素处理](https://home.huhuaping.com/2020/12/03/web-scraping-tech-webelem/)
+[自动化数据抓取技术(V)：APACHA人机验证机制](https://home.huhuaping.com/2020/12/05/web-scraping-tech-vision-volidation/)
+3. 实例：机构代码自动化查询
+[爬虫技术RSelenium + Firefox：机构代码自动化查询](https://huhuaping.com/r-learning/webscrape-01-hack-institution-code)
+[视频教程](https://d.seit2019.xyz/wp-content/uploads/2020/10/spider-institution-code.mp4)
+
+
+
+## R语言——从数据思维到数据实战
+
+- HTML是网络前端技术最核心的三大技术之一(HTML、CSS、JavaScript)，是超文本标记语言，是一种描述内容并定义其表征的标记语言。
+
+- HTML的语法规则：
+
+· 用浏览器找到【HTML源码】(两种方法：右键，检查；右上角，更多工具，开发者工具;点击左上角的箭头或ctrl+shift+C，可以查找到页面及对应的代码)
+
+- R语言中的HTML解析
+
+- `RCurl()`抓取网页信息，RCurl功能强大，可以爬取静态网页和动态网页，但对用户并不够友好，Hadley曾仿照RCurl写过一款精简版的包——httr，功能虽不如RCurl那么齐全，但对于用户而言绝对友好。
+
+```{r}
+# 清空工作目录
+rm(list = ls())
+# RCurl解析网页语言
+library(XML)
+library(bitops)
+library(RCurl)  # 二元爬虫，但较复杂
+temp = getURL('网址')
+A = htmlParse(temp)  # 利用getURL()将网页内容拓下来，再用htmlParse()将网页内容解析为R语言可阅读的内容
+
+# example
+library(XML)
+library(RCurl)
+temp = getURL('https://movie.douban.com/subject/26862829')
+fanghua = htmlParse(temp)  # 利用getURL()将网页内容拓下来，再用XML::htmlParse()将网页内容解析为R语言可阅读的内容
+fanghua
+```
+
+- XML也是一种标记语言，Xpath表达式是一种可以查询标记语言的方法。补充：`SelectorGadget`自动生成Xpath表达式，可以去尝试，`八爪鱼`也可以找出如`.attrs a`和`.rating_num`这样的与想要的内容相关联的节点名称。
+
+- `rvest()`爬取静态网页，rvest作为一款方便快捷的R爬虫包，类似于Python的BeautifulSoup，配上CSS选择器简直就是结构化网页数据抓取的利器。
+
+```{r}
+library(rvest)  # 是对静态网页抓取比较有效且简单的方法
+library(xml2)
+library(dplyr)
+read_html('网址') %>%
+  html_notes(xpath = "节点") %>%
+  html_text()  # read_html()读取网页信息；html_nodes()指向具体节点，一个“/”选择根节点(树状结构<head><body>部分)，“//”选择任意节点，"@"选择属性(黄色字体)；html_text()将要抓取的内容输入文本，输出时也只有要抓取的内容的文本。
+
+# example
+library(rvest)  # 是对静态网页抓取比较有效且简单的方法
+library(xml2)
+library(dplyr)
+
+# 抓取标题及年份
+read_html('https://movie.douban.com/subject/26862829') %>%
+  html_nodes(xpath = "//h1//span") %>%
+  html_text()  # read_html()读取网页信息；
+
+# 抓取导演
+read_html('https://movie.douban.com/subject/26862829') %>%
+  html_nodes(xpath = "/html/body/div[3]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[2]/span[1]/span[2]/a") %>%  # 建立页面信息和代码联系，找到想爬去的页面信息的代码，右键copy(copy full xpath，比较保险)
+  html_text()  # read_html()读取网页信息；
+read_html('https://movie.douban.com/subject/26862829') %>%
+  html_nodes(xpath = "//*[@id='info']/span[1]/span[2]/a") %>%  # copy(copy xpath)
+  html_text()  # read_html()读取网页信息；
+
+# 爬取页面信息
+read_html('https://movie.douban.com/subject/26862829') %>%
+  html_nodes(xpath = "//body//div//div//div//div//div//div//div[@id='info']") %>%
+  html_text()  # read_html()读取网页信息；
+read_html('https://movie.douban.com/subject/26862829') %>%
+  html_nodes(xpath = "//*[@id='info']") %>%
+  html_text()  # read_html()读取网页信息；
+read_html('https://movie.douban.com/subject/26862829') %>%
+  html_nodes("#info") %>%  # 输入的标记，建立页面信息和代码的联系，然后鼠标在想要的信息附近发现div#info
+  html_text()  # read_html()读取网页信息；
+
+# 获取页面中所有的人名
+read_html('https://movie.douban.com/subject/26862829') %>%
+  html_nodes(".attrs a") %>%  # .attrs a根据想要的信息对应的源代码写出的，或者找出fullxpath
+  html_text()
+
+# 获取豆瓣评分
+read_html('https://movie.douban.com/subject/26862829') %>%
+  html_nodes(".rating_num") %>%  # .rating_num根据想要的信息对应的源代码写出的
+  html_text()
+read_html('https://movie.douban.com/subject/26862829') %>%
+  html_nodes(xpath = "/html/body/div[3]/div[1]/div[2]/div[1]/div[1]/div[1]/div[2]/div[1]/div[2]/strong") %>%  # 或者找出fullxpath
+  html_text()
+read_html('https://movie.douban.com/subject/26862829') %>%
+  html_nodes(xpath = "//*[contains(concat(' ', @class, ' '), concat(' ', 'rating_num', ' '))]") %>%  # 利用SelectorGadget生成的xpath
+  html_text()
+```
+
+
+## 实战1：readlines()爬取电影排行榜
+
+```{r}
+x = readLines('http://www.imdb.com/chart/')
+grep('Rank',x)
+
+```
+
+
+## 实战2：readlines()静态网页抓取中国海关总署【统计月报】——在线网址形式的html表格数据
+
+- **任务**：将胡老师爬取的数据从2020年5月更新到2021年4月
+
+a. 以源文件方式保存[主站](http://www.customs.gov.cn/customs/302249/zfxxgk/2799825/302274/302277/3512606/index.html)。
+
+b. 第一步是需要获得指定“主题”（例如“(13)出口主要商品量值表；(14)进口主要商品量值表；(15)对部分国家(地区)出口商品类章金额表；(16)自部分国家(地区)进口商品类章金额表”）下所有月份的实际网址url。
+
+c. 根据获取的实际url，下载全部静态表格网页到本地，并批量命名。
+
+d. 通过下载所有月份的静态网页html（含有数据表），然后再进行数据整合。
+
+```{r}
+require("rvest")
+require("stringr")
+require("tidyverse")
+require("tidyselect")
+
+# step 01: get web_source_code (utf-8)
+# 将源代码存入.txt文件，选择“文件”工具栏，“另存为”，将编码选项设置为“UTF-8"
+# 现在【海关总署】网页改革，变成了每一页只能抓到一年的源代码，则以2021年为例
+
+# step 2: read the txt file with correct encoding type
+the_web <- readLines("web_source_code.txt", encoding = "UTF-8")
+
+# step 3: specify the needed table title(表16为试运行的例子)
+the_title <- "自部分国家(地区)进口商品类章金额表"
+
+# step 4: create the whole url scrape function
+get_url <- function(web = the_web, title = the_title){
+  # 4.1 locate the line number
+  id_currency <- grep("表名 （", web)
+  id_head <- grep(title, web)
+  id_url <- id_head+1
+  # 4.2 choose the useful lines
+  tbl_choose <- tibble(id_currency = grep("表名 （", web),
+         id_head = grep(title, web),
+         id_url = id_head+1,
+         txt_currency=web[id_currency],
+         txt_head= web[id_head],
+         txt_url=web[id_url])
+  # 4.3 extract the currency/year/variables
+  tbl_extract <- tbl_choose %>%
+    # extract currency
+    mutate(currency= str_extract_all(txt_currency, "(?<=（)(.+)(?=）)")) %>%
+    mutate(currency= str_replace(currency, " ", "")) %>%
+    # extract year
+    mutate(year=as.numeric(str_extract_all(txt_head, "(?<=\\))(\\d{4})"))) %>%
+    # extract variables
+    mutate(variables=str_extract(txt_head, "进口|出口|进出口"))
+  # 4.4 map function which we can extract the month and its real url
+  extract_url <- function(txt){
+    text_tbl <- tibble(text=unlist(str_split(txt,pattern ="</a>"))) %>%
+      filter(str_detect(text,"月")) %>%
+      mutate(text=str_replace_all(text,"><a", "<a")) %>%
+      # extract month
+      mutate(month=str_extract(text,  pattern = "(?<=>)(.+)(?=月)")) %>%
+      # extract url
+      mutate(url=str_extract(text,  pattern = "(?<=http://)(.*.html)"))
+    return(text_tbl)
+  }
+  # 4.5 map and unnest  
+  tbl_map <- tbl_extract %>%
+    mutate(tbl=map(.x=txt_url, .f = extract_url )) %>%
+    unnest(cols = tbl) %>%
+    select(currency,variables,year,month, url ) 
+    
+  
+  return(tbl_map)
+}
+
+# tbl_show <- get_url(title = "自部分国家(地区)进口商品类章金额表")
+
+
+
+
+# 下面，我们把所有感兴趣的主体的url地址全部抓取下来：
+# set topic we need
+all_title <- c("进出口商品类章总值表",  # 表4 
+               "出口主要商品量值表",    # 表13
+               "进口主要商品量值表",    # 表14
+               "出口商品类章金额表",    # 表15
+               "进口商品类章金额表")    # 表16
+number_tbl <- paste0("表", c(4,13:16))
+# loop for all table
+### i <-1
+tbl_all <- NULL
+for (i in 1:length(all_title)){
+  tbl_show <- get_url(web = the_web, title = all_title[i]) %>%
+    add_column(table=all_title[i], .before = "currency") %>%
+    add_column(number=number_tbl[i], .before = "table") 
+  tbl_all <- bind_rows(tbl_all, tbl_show)
+  print(number_tbl[i])
+}
+
+tbl_all <- tbl_all %>%
+  # handle the month with leading zero
+  mutate(month= str_replace(month, "1-2", "2")) %>%
+  mutate(month=str_trim(month, side = "both")) %>%
+  mutate(month=str_pad(month, width = 2, pad = "0"))
+```
+
+
+## 实战3：rvest静态网页爬取新浪内地新闻最新新闻
+
+- [参考文献](https://blog.csdn.net/ddxygq/article/details/86549538?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+- [爬取澎湃新闻首页的新闻(标题、内容、时间)](https://blog.csdn.net/seeyouer1205/article/details/117218645?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+- [基于R语言rvest包的网页数据爬取（基础）](https://blog.csdn.net/Hooah_/article/details/89578777?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+
+- 分析网站及爬取目标：
+【最新新闻】位于页面左下角，一页20个新闻，包含*题目**内容链接**日期*
+
+- 爬取步骤：
+step01:`rvest()`抓取第一页第一个最新新闻的*题目**内容链接**日期*，利用xpath代码，以及`regex`抓取目标内容；
+step02:建立`循环`爬取第一页的20个最新新闻；
+step03:`RSelenium`实现翻页操作(模拟鼠标点击下一页)，抓取所需页数的最新新闻；
+step04:写入csv文件。
+
+
+```{r}
+# 载入rvest包：
+
+library("xml2")
+library("rvest")
+library("dplyr")
+library("stringr")
+require("tidyverse")
+
+# 这一页网址为：
+url_web <- 'http://news.sina.com.cn/china/'
+url_web <- "https://news.sina.com.cn/c/2021-06-21/doc-ikqciyzk0848729.shtml"
+
+# check scraping legal
+install.packages("robotstxt")
+library("robotstxt")
+get_robotstxt(domain = "http://news.sina.com.cn/")
+
+# 检查显示该网站具有防爬虫设置，具体如下。
+#User-agent: *
+#Disallow: /wap/
+#Disallow: /iframe/
+#Disallow: /temp/
+
+# 下载这一页全部网页元素：
+web <- read_html(url_web,encoding = "utf-8")
+class(web)
+xpath_item <-"//*[@id='feedCardContent']/div[1]/div[1]/h2/a"
+css_item <- "#feedCardContent > div:nth-child(1) > div:nth-child(1) > h2 "
+
+xpath_item <-"//*[@id='feedCardContent']"
+
+# try another website and scraping successfully
+url_web <- "https://news.nwsuaf.edu.cn/index.htm"
+xpath_item <-"/html/body/div/div[2]/div/div[1]/div[2]/div/ul/li/a"
+
+# 网页所有文字信息：
+News <- read_html(url_web,encoding = "utf-8") %>%
+  #html_nodes(css = css_item) %>%  
+  html_nodes(xpath = xpath_item) %>%  # 
+  html_text() 
+
+News
+
+
+
+
+
+
+
+
+
+# 只抓取【最新新闻】
+latest_news <- web %>%
+  html_nodes(xpath = "/html/body/div[7]/div[1]/div[3]/div[6]/div[1]") %>%  # full xpath失败
+  html_text()
+
+latest_news1 <- web %>%
+  html_nodes(xpath = "/html/body/div[7]/div[1]/div[3]/div[6]/div[1]/div[1]/h2/a") %>%  # full xpath失败
+  html_text()
+
+# 最新新闻一页20个，n页
+/html/body/div[7]/div[1]/div[3]/div[6]/div[1]/div[1]/h2/a
+
+/html/body/div[7]/div[1]/div[3]/div[6]/div[1]/div[2]/h2/a
+
+/html/body/div[7]/div[1]/div[3]/div[6]/div[1]/div[3]/h2/a
+
+# 最后一个
+/html/body/div[7]/div[1]/div[3]/div[6]/div[1]/div[20]/h2/a
+
+# 第6页最后一个最新新闻的xpath
+/html/body/div[7]/div[1]/div[3]/div[6]/div[1]/div[20]/h2/a
+
+
+
+
+
+latest_news <- web %>%
+  html_nodes("//*~[contains(concat( ' ', @class, ' ' ), concat( ' ', 'feed-card-item', ' ' ))]//*+[contains(concat( ' ', @class, ' ' ), concat( ' ', 'feed-card-item', ' ' ))]//*[contains(concat( ' ', @class, ' ' ), concat( ' ', 'feed-card-item', ' '))]//a | //*[contains(concat( ' ', @class, ' '), concat( ' ', 'feed-card-item', ' ' )) and (((count(preceding-sibling::*) + 1) = 1) and parent::*)]//a") %>%  # selectorgadget失败
+  html_text()
+
+# 获得新闻标题：
+Title <- web %>%
+  html_nodes(".feed-card-item h2 a") %>%
+  html_text()
+# 获得新闻时间：
+Time <- web %>%
+  html_nodes('div.feed-card-time') %>%
+  html_text()
+# 获得新闻链接：
+link <- News %>%
+  html_attrs()  # 函数html_attrs()获得链接
+link
+# 处理链接
+link1 <- c(1:length(link))  # 初始化一个向量
+for(i in 1:length(link)){
+    link1[i] <- link[[i]][1]
+}
+
+# 保存为csv文件
+dat <- data.frame(Title,Time,link1)
+write.csv(dat,file = 'news.csv',row.names = FALSE)
+
+```
+
+
+
+
+## 实战4：rvest静态网页爬取链家杭州二手房信息(多页)
+
+- 实现结构化网页的数据抓取(静态网页爬虫)
+
+- [HTML基础与R语言解析](https://mp.weixin.qq.com/s?__biz=MzA5MjEyMTYwMg==&mid=2650242455&idx=1&sn=298848d111f4c37dcd7983b4f54374ad&chksm=887222fabf05abec09960fa76a7c328c7827f7a4130daaafbeda1631ee79d5df6d12266aa2c5&scene=21#wechat_redirect)
+- [XML与XPath表达式以及R爬虫应用](https://mp.weixin.qq.com/s?__biz=MzA5MjEyMTYwMg==&mid=2650242607&idx=1&sn=bf2d1f6723e4ee7e481c88120b6f2095&chksm=88722142bf05a85494f8d197c4a327da9ab3cd46efe11b98336aff7bf5876ca2905707895215&scene=21#wechat_redirect)
+- [HTTP协议与R语言爬虫](https://mp.weixin.qq.com/s?__biz=MzA5MjEyMTYwMg==&mid=2650242648&idx=1&sn=1069cf78609487e3cedd3e7f6bfc84c8&chksm=88722135bf05a823cdd26c7254ae391e4ca01e0bd07497a49ebd5c08deee5f4416bc863cd530&scene=21#wechat_redirect)
+- [数据爬虫：AJAX与网页动态加载](https://mp.weixin.qq.com/s?__biz=MzA5MjEyMTYwMg==&mid=2650242731&idx=1&sn=f564b14d4a3d63d91c47185623cd4835&chksm=887221c6bf05a8d02816c3b803ac7703a482d5f5ffd55ac1ebf4a58a3136f0173d361b8a0966&scene=21#wechat_redirect)
+- [数据爬虫：正则表达式与字符串处理函数](https://mp.weixin.qq.com/s?__biz=MzA5MjEyMTYwMg==&mid=2650242754&idx=1&sn=5601be2e3d1d9a19a36a243ca5cee206&chksm=887221afbf05a8b93da2b148917e6687877e52ba92158f8d950cc4044a7ad256008780b9b840&scene=21#wechat_redirect)
+- [数据爬虫：R语言爬虫实战](https://mp.weixin.qq.com/s/IGcEL1htA86pFK5T6XHc6A)
+
+
+- 静态网页爬虫（网页上的数据就在网页上直接显示）
+
+- 一个完整的爬虫过程可以简要地概括为“抓”“析”“存”三个阶段，大意是（1）通过程序语言将目标网页抓取下载下来，（2）应用相关函数对URL进行解析并提取目标数据，（3）最后将数据存入本地数据库。其间涉及【网页遍历】、【批量抓取】、【如何设置代理】、【cookie登入】、【伪装报头】、【GET/POST表单提交】等复杂的技术细节，这些都增加了爬虫难度。
+
+- `rvest()`静态网页爬虫涉及主要函数
+
+`read_html()`：下载并解析网页
+
+`html_nodes()`：定位并获取节点信息
+
+`html_text()`：提取节点属性文本信息
+
+```{r}
+# 爬取链家杭州二手房网页：目标是汇总房名、地址、总价、单价信息，并爬取
+
+
+# 加载所需的包：
+library("xml2")
+library("rvest")
+library("dplyr")
+library("stringr")
+
+
+# 对爬取页数进行设定并创建数据框：
+i <- 1:100
+house_inf <- data.frame()
+
+
+#利用for循环封装爬虫代码，进行批量抓取：
+
+# 作为演示，循环前要先看第1个可行否
+#i = 1
+#web <- read_html(str_c("http://hz.lianjia.com/ershoufang/pg", i), encoding = "UTF-8")
+#house_basic_inf <- web %>%html_nodes(".houseInfo") %>%html_text()
+#house_basic_inf <- web %>%html_nodes(xpath = "//*[class='houseInfo']") %>%html_text()  # 或利用xpath表达式爬取
+#house_basic_inf
+#house_basic_inf <- str_replace_all(house_basic_inf," ","")  # 将内容里面所有空格" "转变为不空""
+#house_basic_inf
+
+
+# 建立循环:
+for (i in 1:100){  # 发现url规律，利用字符串函数进行url拼接并规定编码：
+web <- read_html(str_c("http://hz.lianjia.com/ershoufang/pg", i), encoding = "UTF-8")
+
+
+#提取房屋基本信息并消除空格：
+house_basic_inf <- web %>%
+  html_nodes(".houseInfo") %>%
+  html_text()
+house_basic_inf <- str_replace_all(house_basic_inf," ","")
+
+
+#提取二手房地址信息及房名:
+house_address <- web %>%
+  html_nodes(".positionInfo a") %>%
+  html_text()
+#house_name <- web %>%html_nodes(xpath = "/html/body/div[4]/div[1]/ul/li[1]/div[1]/div[2]/div/a[1]") %>%html_text() # 这样抓只抓住了一个房名
+house_name <- house_address[seq(1,59,2)]   # 根据address里面的信息发现奇数位为房屋名称，偶数位为地理位置，因此用seq()选取等差数列，按等差为2索引第1位到第59位的数据。
+house_address <- house_address[seq(2,60,2)]
+
+
+#提取二手房总价信息:
+house_totalprice <- web %>%
+  html_nodes(".totalPrice") %>%
+  html_text()
+
+
+#提取二手房单价信息:
+house_unitprice <- web %>%
+  html_nodes(".unitPrice span") %>%
+  html_text()
+
+
+#创建数据框存储以上信息:
+house <- data.frame(house_name, house_basic_inf, house_address, house_totalprice, house_unitprice)
+house_inf <- rbind(house_inf, house)
+}
+
+#将数据写入csv文档:
+write.csv(house_inf, file="../house_inf.csv")
+
+```
+
+【思考】
+1. 如何按照奇偶数筛选一个向量的元素、数据框的行？
+2. 如何将一列数据的值集体去掉2个字或者增加2个字？
+3. 如何在循环中加入可以表示正在进行到什么程度的显示？`在project1中是print(paste0("成功合并到了第",i,"个文件。共有",n,"个文件！"))`
+- [进度条设置](https://blog.csdn.net/kMD8d5R/article/details/87658915?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blenhttps://blog.csdn.net/kMD8d5R/article/details/87658915?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+4. 爬虫时如何去确定被爬虫内容的定位点或者xpath(特别是动态网页，每一页部分内容怎么做？静态网页每一个部分的相同板块如何去爬？)。
+
+
+
+
+## 实战5：rvest静态网页爬取豆瓣电影top250
+
+- [R语言-豆瓣电影top250数据爬取和分析](https://blog.csdn.net/weixin_44035441/article/details/90728609?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+
+```{r}
+# 1. 在豆瓣网站爬取TOP250电影的信息：
+
+library(stringr)
+library(rvest)
+library(RCurl)
+library(openxlsx)
+library(XML)
+library(dplyr)
+library(magrittr)
+ 
+#构建数据框存放数据
+top <-data.frame()
+#设置网页入口网 根据页数设置循环
+i<- seq(0,225,by=25)
+for (i in 1:10){
+  url1 <- "https://movie.douban.com/top250"
+  url2 <- "?start="
+  url3 <-"&filter="
+  url <-paste(url1,url2,a[i],url3,sep = "")
+  webpage <-read_html(url,encoding = 'utf-8') 
+  #电影名
+  title <- html_nodes(webpage,".title:nth-child(1)") %>% html_text()
+  #排名
+  rank <- html_nodes(webpage,"em") %>% html_text()
+  rank <- as.numeric(rank)
+  #评分
+  rate <- html_nodes(webpage, ".rating_num") %>% html_text()
+  rate <-as.numeric(rate)
+  #评分人数
+  num <- html_nodes(webpage, ".rating_num~ span") %>% html_text() %>% 
+    str_match("[0-9]*") 
+  num <- as.numeric(num)
+  num <- num[!is.na(num)]
+  #评论
+  comment <- html_nodes(webpage, ".inq") %>% html_text()
+  #提取所有的附加信息
+  info <- webpage %>% html_nodes("div.info div.bd p:nth-child(1)") %>% 
+    html_text(trim = TRUE)
+  info <- str_split(info, "\\n")
+  info1 <- sapply(info, "[", 1)
+  #导演
+  director <- str_trim(sapply(str_split(info1, "\\s{3}"), "[", 1))
+  #演员
+  actor <- str_trim(sapply(str_split(info1, "\\s{3}"), "[", 2))
+  info2 <- sapply(info, "[", 2)
+  #年份
+  year <- str_trim(sapply(str_split(info2, "/"), "[", 1))
+  #国家
+  region <- str_trim(sapply(str_split(info2, "/"), "[", 2))
+  #类型
+  category <- str_trim(sapply(str_split(info2, "/"), "[", 3))
+  top <- rbind(top,data.frame(rank,title,rate,num,director,actor,year,region,category))
+}
+#导出为Excel文件
+wb <-createWorkbook()
+addWorksheet(wb,"1")
+writeDataTable(wb,1,top,tableStyle = "TableStyleLight16")
+saveWorkbook(wb,"6.xlsx",overwrite = TRUE)
+
+
+# 2. 数据预处理、对数据进行探索性分析：
+
+#处理部分异常数据 年份
+movie <- read.xlsx("C:\\Users\\asus\\Documents\\6.xlsx")
+movie[,7] <-str_extract(movie[,7],'[0-9]{4}')
+movie$year <- as.numeric(as.character(movie$year))
+#处理异常数据 把国家单独提出来并修改
+area <- movie[,8] 
+area <- strsplit(movie[,8], split = "\\s") 
+area <- sapply(area,function(x) x[1]) %>% str_trim()
+area[219] <- "中国大陆"
+area[71] <- "中国大陆"
+#新数据框
+ty <-movie[,9] %>% strsplit(movie[,9],split="\\s") 
+ty <-sapply(ty, function(x) x[1])%>% str_trim()
+
+
+
+
+area0 <-data.frame(area)
+movie1 <-rbind(  data.frame(movie$rank, ty,  area))
+movie1 <-movie1[-71,]
+movie1 <-movie1[-218,]
+ 
+#画图 bar-国家
+ggplot(area0,aes(x=area0$area))+geom_bar(stat="count",fill="lightgreen")+labs(
+  x="国家",y="频数",   title="top250电影在不同国家分布情况")
+area1 <-table(with(area0,tapply(area, list(area), length)))
+area1 = area0 %>% group_by(area) %>% count %>% ungroup
+ 
+install.packages("ggthemes")
+library("ggthemes")
+ 
+# 扇形图 国家
+ggplot(area1,aes(x="",y= area1$n,fill=area1$area))+geom_bar(stat="identity")+ coord_polar(theta = "y")+theme_bw()
+ 
+#散点图 排名与国家
+ggplot(movie1,aes(y=movie1$movie.rank,x=movie1$area)) + geom_point(color ="darkblue" )+labs(
+  x="电影排名",y="国家" ,title="top250电影排名及其国家分布情况")
+ 
+#散点图 排名与类型
+ggplot(movie1,aes(y=movie1$movie.rank,x=movie1$ty)) + geom_point(color ="darkred" )+labs(
+  x="电影排名",y="电影类型" ,title="top250电影排名及其电影类型分布情况")
+ 
+#柱形图 年份
+ggplot(movie,aes(x=movie$year))+geom_bar(stat="count",fill="lightblue")+labs(
+  x="年份",y="频数",    title="top250电影在不同年份分布情况")
+ 
+#画图 分数与评分人数的关系
+ggplot(movie,aes(x=movie$rate,y=movie$num)) + geom_point(color ="darkblue" )+labs(
+  x="电影评分",y="评分人数" ,title="top250电影分数与评分人数情况")
+ 
+# 评分人数 排名
+ggplot(movie,aes(x=movie$rank,y=movie$num)) + geom_point(color ="green" )+labs(
+ x="电影排名",y="评分人数" ,title="top250电影排名与评分人数情况")+stat_smooth()
+ 
+#中位数
+median(movie$num)
+ 
+nation <- data.frame()
+nation <- (movie$region)
+ 
+#连续型变量箱线图
+#年份
+p<- ggplot(movie,aes(y=movie$year))+geom_boxplot(fill="orange")+labs(
+  y = "年份")
+#评分
+pp<- ggplot(movie,aes(y=movie$rate))+geom_boxplot(fill="green")+labs(
+  y = "电影评分")
+#评分人数
+ppp<- ggplot(movie,aes(y=movie$num))+geom_boxplot(fill="pink")+labs(
+  y = "评分人数")
+#柱状图 评分
+ggplot(movie,aes(x=movie$rate))+geom_bar(stat="count",fill="purple")+labs(
+ x="评分",y="频数")
+
+
+
+# 3.简单分析
+
+# 词云
+#wordclond
+#java
+#download package from website first
+install.packages("rJava")
+Sys.setenv(JAVA_HOME="C:\\Program Files\\Java\\jre1.8.0_201")
+library(rJava)
+library(wordcloud2)
+library(wordcloud)
+library(devtools)
+library(Rweibo)
+library(Rwordseg)
+library(ggplot2)
+data <- read.xlsx("6.xlsx")
+data1=data[,9]
+write.table(data1, "C:\\Users\\asus\\data.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+text <- text[-1]
+text <- segmentCN("C:\\Users\\asus\\data.txt",returnType = "tm")
+#读入分词文件
+text1 <- readLines("C:\\Users\\asus\\data.txt",encoding = 'utf-8') 
+#正则表达式按空格把词汇分开
+word = lapply(X = text1, FUN = strsplit, "\\s") #word是一个长list.
+word1=unlist(word)
+#统计词频
+df=table(word1)
+df=sort(df,decreasing = T)
+#把词汇词频存入数据框
+df1 = data.frame(word = names(df), freq = df)
+df1 <- df1[,2:3]
+#修改异常值
+df1 <- df1[-26,]
+df1 <- df1[-26,]
+df1 <- df1[-28,]
+ 
+ 
+wordcloud2(df1,color="random-light",backgroundColor = 'black')
+wordcloud2(df1)
+ 
+wordcloud2(df1, fontFamily = "微软雅黑",  
+           color = "random-light", backgroundColor = "grey") 
+
+
+#相关性系数矩阵
+mydata <- read.delim("C:\\Users\\asus\\Documents\\11.txt",header = TRUE)
+d<- mydata[,c(1,3,4,7)]
+d <- as.matrix(d)
+#进行转换后变成字符串矩阵，要将其转为数据值。当apply函数的第二个值为1时则修改的是行
+d <- apply(d,2,as.numeric)
+res <- cor(d)
+round(res,1)
+install.packages("corrplot")
+library(corrplot)
+corrplot(res,type="upper",order="hclust",tl.col="black",tl.srt=45)
+
+# 4.分析结论：
+# 在豆瓣电影的TOP250中，电影产地为美国、类型为剧情的电影最受欢迎，其次是爱情、喜剧、犯罪类型的电影也比较受欢迎。大多数时候评分人数越多，电影评分也会越高。其中，美国的电影“肖申克的救赎”获得极大多人的喜爱，为TOP1，电影评分与评分人数都遥遥领先于其他电影。
+
+
+```
+
+
+## 实战6：rvest静态网页爬取——BOSS直聘【北京产品实习生】并清洗数据
+
+- [基于rvest包爬取BOSS直聘-上海里有关“数据分析”的职位信息](https://blog.csdn.net/weixin_40278806/article/details/80333075?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+
+```{r}
+# 加载包
+library("xml2")
+library("rvest")
+library("dplyr")
+library("stringr")
+
+# 对爬取页数进行设定并创建数据框：
+i <- 1:30
+intern_inf <- data.frame()
+
+# 读取页面信息
+i = 1
+web <- read_html(str_c("https://www.zhipin.com/c101010100-p110101/e_108/?ka=sel-exp-108", i), encoding = "UTF-8")
+
+
+
+
+for(i in 1:30){
+  
+  
+# 抓取实习名称：
+title_inf <- web %>%
+  html_nodes(xpath = ".job-title") %>%
+  html_text()
+
+# 抓取公司名称：
+company_inf <- web %>%
+  html_nodes(".name") %>%
+  html_text()
+  
+  # 替换掉多余字符
+  name1 <- gsub("<h3 class=\"name\">","",name1)
+  name1 <- gsub(" <span class=\"red\">.*","",name1)
+  name1 <- gsub("</span>\n</h3>","",name1)
+  name1 <- gsub("</h3>","",name1)
+  titlename <- as.data.frame(name1)
+  
+  name2 <- gsub("<h3 class=\"name\">","",name2)
+  name2 <- gsub("</h3>","",name2)
+  companyname <- as.data.frame(name2)
+  
+  bossdata <- data.frame(companyname,titlename)
+  bossdata
+
+  # 抓取薪资
+  salary <- html_nodes(webpage,'.red')
+  salary <- gsub("<span class=\"red\">","",salary)
+  salary <- gsub("</span>","",salary)
+  salary
+  
+  bossdata <- cbind(bossdata,salary)
+  bossdata
+
+  # 抓取要求及公司信息
+  message <- html_nodes(webpage,'p')
+  message <- message[-1]
+  message <- gsub("<p>","",message)
+  message <- gsub("<em class=\"vline\"></em>",",",message)
+  message <- gsub("</p>","",message)
+  message <- gsub("<img",",",message)
+  message
+  
+  i <- as.numeric(length(message))-6
+  i
+  message <- message[1:i]
+  
+  # 先设置三个变量，分别读取message中的不同数据
+  xx <- c(1:as.numeric(length(message)/3))
+  yy <- c(1:as.numeric(length(message)/3))
+  zz <- c(1:as.numeric(length(message)/3))
+  
+  # xx用来存放message中的地点、经验、学历要求
+  k1 <- 1
+  l1 <- 1
+  for(k1 in seq(1:(length(message)/3))){
+    xx[k1] <- message[l1]
+    l1 <- k1*3+1
+  }
+  xx
+  
+  # 可以看出xx虽然提取正确了，但是还需要进一步处理
+  xx <- as.data.frame(xx)
+  xx
+  xx <- apply(as.data.frame(xx),1,strsplit,",")
+  xx
+  
+  xx <- as.data.frame(xx)
+  xx[1,]
+  
+  # 分别提取xx中的地点，经验，学历
+  place <- t(as.data.frame(xx[1,]))
+  experience <- t(as.data.frame(xx[2,]))
+  education <- t(as.data.frame(xx[3,]))
+  
+  # 合并数据框
+  bdata <- data.frame(place,experience,education)
+  names(bdata) = c("place", "experience", "education")
+  bossdata <- data.frame(bossdata, bdata)
+  bossdata
+  
+  # yy用来存放行业，融资情况，公司规模
+  k2 <- 1
+  l2 <- 2
+  for(k2 in seq(1:15)){
+    yy[k2] <- message[l2]
+    l2 <- k2*3+2
+  }
+  yy <- as.data.frame(na.omit(yy))
+  yy
+  
+  # 拆分数据
+  yy <- apply(as.data.frame(yy),1,strsplit,",")
+  
+  # 提取行业信息
+  industry <- data.frame(NA)
+  financing <- data.frame(NA)
+  companysize <- data.frame(NA)
+  aaa <- 1
+  for (aaa in 1:15){
+    ind <- as.data.frame(yy[aaa])
+    names(ind) <- ""
+    industry[aaa,] <- t(ind)[1]
+    financing[aaa,] <- t(ind)[2]
+    companysize[aaa,] <- t(ind)[3]
+  }
+  industry # 行业信息
+  financing # 融资信息
+  companysize # 公司规模信息
+  
+  # 填补空白的内容
+  if(page == 2){
+    financing5 <- financing[5,]
+    financing13 <- financing[13,]
+    
+    financing[5,] <- NA
+    financing[13,] <- NA
+    companysize[5,] <- financing5
+    companysize[13,] <- financing13
+  }
+  else {
+    print("Hello World")
+  }
+  
+  # 整合所有信息
+  aqq <- as.data.frame(cbind(industry,financing,companysize),row.names = c(1:15))
+  names(aqq) <- c("industry","financing","companysize")
+  
+  # 添加到数据框中
+  bossdata <- data.frame(bossdata,aqq, row.names = c(1:length(bossdata[,1])))
+  bossdata
+
+# write.table(bossdata,file="bossdata.csv",sep=",",append=T,row.names = c(1:15),col.names = F)
+  
+  # zz用来存放联系人及职位
+  k3 <- 1
+  l3 <- 3
+  for(k3 in seq(1:(length(message)/3))){
+    zz[k3] <- message[l3]
+    l3 <- (k3+1)*3
+  }
+  zz <- as.data.frame(na.omit(zz))
+  zz
+  # 拆分数据
+  zz <- apply(as.data.frame(zz),1,strsplit,",")
+  
+  # 提取联系人信息
+  linkm <- data.frame(NA)
+  linkman <- data.frame(NA)
+  position <- data.frame(NA)
+  
+  for (ccc in 1:15){
+    linkm <- as.data.frame(zz[ccc])
+    names(linkm) <- ""
+    linkman[ccc] <- t(linkm)[1] #提取联系人信息
+    position[ccc] <- t(linkm)[2] #提取联系人职位信息
+      }
+  linkman <- as.data.frame(t(linkman),row.names = F)
+  position <- as.data.frame(t(position),row.names = F)
+  
+  # 添加到数据框中
+  bossdata <- data.frame(bossdata,linkman,position)
+  bossdata
+  
+# write.table(bossdata,file="bossdata.csv",sep=",",append=T,row.names = c(1:15),col.names = F)
+  
+  # 抓取关键词
+  keywords <- html_nodes(webpage,'.job-tags span')
+  keywords <- gsub("<span>","",keywords)
+  keywords <- gsub("</span>","",keywords)
+  keywords <- gsub("<span class=\"time\">.*","",keywords)
+  
+  write.table(bossdata,file="bossdata.csv",sep=",",append=T,row.names = c(1:15),col.names = F)
+  
+  write.table(keywords,file="keywords.csv",sep=",",append=T,row.names = F,col.names = F)
+ }
+################################################## 爬取结束 ##################################################
+
+#### 读取、整理数据 ####
+shenzhendata <- read.table("bossdata.csv",sep=",")
+shenzhendata <- shenzhendata[,2:12]
+names(shenzhendata) <- c("companyname","titlename","salary","place","experience",
+                         "education","industry","financing","copanysize","linkman","position")
+shenzhendata
+
+
+
+
+
+
+
+library(xml2)
+library(rvest)
+library(stringr)
+library(dplyr)
+i <- 1:10
+job_inf <- data.frame()
+for (i in 1:10){
+  webpage <- read_html(str_c("https://www.zhipin.com/c101020100/h_101020100/?query=%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90&page=",i,"&ka=page-",i),encoding="UTF-8")
+  job_title_html <- html_nodes(webpage,".job-title")
+  job_title <- html_text(job_title_html)
+  salary_html <- html_nodes(webpage,".red")
+  salary <- html_text(salary_html)
+  company_basic_html <- html_nodes(webpage,".company-text p")
+  company_basic <- gsub("<p>","",company_basic_html)
+  company_basic <- gsub("em class=\"vline\"></em>","",company_basic)
+  company_basic <- gsub("</p>","",company_basic)
+  company_basic <- as.character(company_basic)
+  job_needs_html <- html_nodes(webpage,".info-primary p")
+  job_needs <- gsub("<p>","",job_needs_html)
+  job_needs <- gsub("em class=\"vline\"></em>","",job_needs)
+  job_needs <- gsub("</p>","",job_needs)
+  job_needs <- str_replace_all(job_needs," ","")
+  job_needs <- as.character(job_needs)
+  job <- data.frame(job_title,salary,company_basic,job_needs)
+  job_inf <- rbind(job_inf,job)
+}
+write.csv(job_inf,file="bossdata.csv")
+
+
+
+
+```
+
+
+## 实战7：RCurl/httr实现动态网页抓取
+
+- 动态网页爬虫(涉及网页内容的更新、实时变化)
+
+- 动态加载的过程更关注【检查】【Network】【刷新】
+
+- [参考文献1](https://blog.csdn.net/u011402596/article/details/43913983?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+
+- [参考文献2](https://blog.csdn.net/yujianmin1990/article/details/48396195?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+
+- [R语言学习笔记（八）--读写文件与网络爬虫](https://blog.csdn.net/yichao0630/article/details/106072813?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+```{r}
+# 爬取网页文字
+
+
+
+# 爬取简单网页
+library(XML)
+url <- "http://hz.house.ifeng.com/detail/2014_10_28/50087618_1.shtml"
+tbls <- readHTMLTable(url)
+sapply(tbls, nrow)
+pop <- readHTMLTable(url, which = 1)
+#存储pop为CSV文档
+write.csv(pop, file="C:/Users/Administrator/Desktop")
+
+```
+
+
+
+## 实战8：爬取B站
+
+
+- [第一个R语言爬虫:爬取政府工作报告并分词、词云](https://blog.csdn.net/u012485480/article/details/79883919?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+- [R语言制作网络爬虫机器人](https://blog.csdn.net/kMD8d5R/article/details/86662830?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+
+
+## 实战9：爬取微博评论
+
+- [R语言微博评论爬虫练习](https://blog.csdn.net/weixin_30289831/article/details/96021934?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+
+```{r}
+
+```
+
+
+## 实战10：爬取天猫评论
+- [R语言 天猫评论爬虫](https://blog.csdn.net/qq_31942317/article/details/78689054?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+- [R语言软件（Rstudio）抓取天猫商品数据示例](https://blog.csdn.net/gavin_cdc/article/details/110237396?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+- [Python爬取淘宝评论](https://blog.csdn.net/weixin_43881394/article/details/105706476?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+- [Python抓取淘宝商品评论内容](https://blog.csdn.net/weixin_34281537/article/details/89648785?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+
+
+- [参考文献1](https://blog.csdn.net/weixin_30799995/article/details/95448518?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+- [参考文献2](https://blog.csdn.net/kMD8d5R/article/details/87658915?utm_source=app&app_version=4.7.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
+
+
+# project 5：数据分析完整步骤
+
+## 数据准备
+
+## 数据预处理
+
+
+- 将字符串数据转化为因子型数据(字符串型数据不能建立模型)
+```{r}
+str(data)  # 查看数据类型
+data$A <- factor(data$A, levels = c("a", "b", "c"), order = T)  # 转化为有序的因子变量Ord.factor，只能一一地转化。
+data[sapply(data, is.character)]<- lapply(data[sapply(data, is.character)], as.factor)  # 转化为因子变量Factor，可以将整个数据框中的所有字符串数据全部转化。
+```
+
+
+## 数据探索性分析
+
+## 数据建模分析
+
+## 数据可视化
